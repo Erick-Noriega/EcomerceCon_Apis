@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.37502.11 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EcomerceCon_Apis", "EcomerceCon_Apis\EcomerceCon_Apis.csproj", "{03DC3AAA-A5C5-4199-81AB-F03B1E836290}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{03DC3AAA-A5C5-4199-81AB-F03B1E836290}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{03DC3AAA-A5C5-4199-81AB-F03B1E836290}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{03DC3AAA-A5C5-4199-81AB-F03B1E836290}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{03DC3AAA-A5C5-4199-81AB-F03B1E836290}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7E8855A7-61E5-4918-BA82-9A17BD6D2796}
+	EndGlobalSection
+EndGlobal

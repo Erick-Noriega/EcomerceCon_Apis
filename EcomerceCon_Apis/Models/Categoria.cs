@@ -1,0 +1,10 @@
+﻿namespace EcomerceCon_Apis.Models
+{
+    public class Categoria
+    {
+        public int Id { get; set; }
+        public string Nombre { get; set; }
+        public List<Producto>? producto { get; set; }
+
+    }
+}
