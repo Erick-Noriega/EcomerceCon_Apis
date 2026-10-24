@@ -13,7 +13,7 @@ namespace EcomerceCon_Apis.Data
         public DbSet<Models.Categoria> Categorias { get; set; }
         public DbSet<Models.DetalleCarrito> DetalleCarritos { get; set; }
         public DbSet<Models.Carrito> Carritos { get; set; }
-
+        public DbSet<Models.MensajeRecibido>MensajeRecibidos{ get; set; }
         public DbSet<Models.DetallePedido> DetallePedidos { get; set; }
         public DbSet<Models.Pedido> Pedidos { get; set; }
         public DbSet<Models.Ofertas> Ofertas { get; set; }
@@ -38,15 +38,12 @@ namespace EcomerceCon_Apis.Data
             modelBuilder.Entity<OfertaProducto>()
                 .HasOne(op => op.oferta)
                 .WithMany(o => o.Productos)
-                .HasForeignKey(op => op.OfertaId);// Nombre de la tabla intermedia en SQL
+                .HasForeignKey(op => op.OfertaId);
 
-
-            // Le fijamos la longitud máxima explícitamente a Identity para que deje de intentar alterarlo
-            // modelBuilder.Entity<Microsoft.AspNetCore.Identity.IdentityUserToken<string>>(b =>
-            // {
-            //     b.Property(t => t.LoginProvider).HasMaxLength(128);
-            //     b.Property(t => t.Name).HasMaxLength(128);
-            // });
+            modelBuilder.Entity<MensajeRecibido>()
+            .HasIndex(m => m.Mensaje)
+            .IsUnique();
+          
         }
     }
 }

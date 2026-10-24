@@ -5,7 +5,7 @@ namespace EcomerceCon_Apis.Dtos.Pedido
     public class DireccionDeEnvioDto
     {
         public string provincia { get; set; }
-        public string Localidad { get; set; }
+        public string Localidad { get; set; }=string.Empty;
         public string calle { get; set; }
         public string piso_depto { get; set; } = string.Empty;
         public string DireccionCompleta =>

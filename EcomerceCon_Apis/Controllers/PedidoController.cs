@@ -101,7 +101,7 @@ namespace EcomerceCon_Apis.Controllers
                 BackUrls = new PreferenceBackUrlsRequest
                 {
                     Success = "https://localhost:5023/Pedido/Pago_exitoso",
-                    Failure = "https://localhost:5023/Pedido/Fallido",
+                    Failure = "http://localhost:5023/Pedido/Fallido",
                     Pending= "https://localhost:5023/Pedido/Pendiente"
                 },
                 

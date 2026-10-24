@@ -122,6 +122,29 @@ namespace EcomerceCon_Apis.Migrations
                     b.ToTable("DetallePedidos");
                 });
 
+            modelBuilder.Entity("EcomerceCon_Apis.Models.MensajeRecibido", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Mensaje")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("fecha")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Mensaje")
+                        .IsUnique();
+
+                    b.ToTable("MensajeRecibidos");
+                });
+
             modelBuilder.Entity("EcomerceCon_Apis.Models.OfertaProducto", b =>
                 {
                     b.Property<int>("OfertaId")
@@ -313,6 +336,9 @@ namespace EcomerceCon_Apis.Migrations
                     b.Property<string>("NormalizedUserName")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("Numero_telefono")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PasswordHash")
                         .HasColumnType("nvarchar(max)");

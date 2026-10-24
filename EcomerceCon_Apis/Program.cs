@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using MercadoPago.Config;
+using EcomerceCon_Apis.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 var mpAccesToken = builder.Configuration["MercadoPago:AccesToken"];
@@ -14,11 +15,10 @@ if (!string.IsNullOrEmpty(mpAccesToken))
 {
     MercadoPagoConfig.AccessToken = mpAccesToken;
 }
-
-// Add services to the container.
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
 var secretKey = builder.Configuration.GetSection("Jwt").GetValue<string>("SecretKey");
 var keyBytes = Encoding.UTF8.GetBytes(secretKey);
+builder.Services.AddMemoryCache();
 builder.Services.AddAuthentication
     (
     config =>
@@ -65,8 +65,9 @@ o.UseSqlServer(builder.Configuration.GetConnectionString("Conexion")));
         o.Password.RequireUppercase = false;
         o.Password.RequiredLength = 6;
     }).AddEntityFrameworkStores<ProductosDbcontext>();
-
-    builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddScoped<IWhatsappService,WhattsapServices>();
+builder.Services.AddScoped<IPagoService,PagosServices>();
+builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
     var app = builder.Build();
 app.UseCors("AllowFrontend");
