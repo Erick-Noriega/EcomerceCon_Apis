@@ -3,6 +3,7 @@ using EcomerceCon_Apis.Dtos;
 using EcomerceCon_Apis.Dtos.Ofertas;
 using EcomerceCon_Apis.Dtos.Producto;
 using EcomerceCon_Apis.Models;
+using EcomerceCon_Apis.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -17,43 +18,54 @@ namespace EcomerceCon_Apis.Controllers
     public class ProductoController : ControllerBase
     {
         private readonly ProductosDbcontext _context;
-
-        public ProductoController(ProductosDbcontext context)
+        private readonly IProductosService _producto;
+        public ProductoController(ProductosDbcontext context,IProductosService ser)
         {
+
             _context = context;
+            _producto = ser;
         }
         [HttpGet]
         [Route("ListaParaAdmins")]
+        [Authorize(Roles ="Admin")]
    
         [ProducesResponseType(typeof(RespuestaGenericaDto<List<ProductoDtoParaAminds>>), StatusCodes.Status200OK)]
 
         public async Task<IActionResult> ListaDeAdmins()
         {
 
-            var fecha = DateTime.Now;
-            var producto = await _context.Productos.Include(c => c.categoria).Include(o => o.ofertas)
-                .Select(p => new ProductoDtoParaAminds
+
+            try
+            {
+
+                var producto = await _producto.ListaDeAdmins();
+                if (producto != null)
                 {
 
-                    Id = p.Id,
+                    return Ok(producto);
+                }
+                else
+                {
+                    return BadRequest(new RespuestaGenericaDto<EditarProductoDto>
+                    {
+                        IsSuccess = false,
+                        Mensaje = "error,no se econtraron productos"
 
-                    Nombre = p.Nombre,
-                    CategoriaId = p.CategoriaId,
-                    ImagenUrl = p.ImagenUrl,
-                    Cantidad = p.cantidad,
-                    tieneoferta = p.ofertas.Any(op => fecha >= op.oferta.Fecha_inicio && fecha <= op.oferta.Fecha_fin),
-                    CategoriaNombre = p.categoria.Nombre,
-                    PrecioOriginal = p.precio,
-                    PrecioFinal= p.ofertas.Any(op => fecha >= op.oferta.Fecha_inicio && fecha <= op.oferta.Fecha_fin)
-    ? p.precio - (p.precio * (p.ofertas
-        .Where(op => fecha >= op.oferta.Fecha_inicio && fecha <= op.oferta.Fecha_fin)
-        .Select(op => op.oferta.MontoAdescontar)
-        .FirstOrDefault() / 100)) // <-- Usa 100.0 si tus precios son double/float
-    : p.precio
+                    });
 
-                }).ToListAsync();
-            return Ok(producto);
+                }
+            }
+            catch (Exception)
+            {
 
+
+                return BadRequest(new RespuestaGenericaDto<EditarProductoDto>
+                {
+                    IsSuccess = false,
+                    Mensaje = "error,no se econtraron productos"
+
+                });
+            }
 
 
         }
@@ -70,48 +82,25 @@ namespace EcomerceCon_Apis.Controllers
             try
             {
 
-
-                var aux = await _context.ofertaProductos.Select(p => p.ProductoId).ToListAsync();
-                var fechaoferta = await _context.Ofertas.Where(f => f.Fecha_inicio >= DateTime.Now && f.Fecha_fin <= DateTime.Now).FirstOrDefaultAsync();
-
-
-                if (await _context.Productos.Include(c => c.categoria).ToListAsync() != null)
+                var producto = await _producto.lista();
+                if (producto != null)
                 {
-                    var fecha = DateTime.Now;
-                    List<ProductoDto> producto = await _context.Productos.Include(c => c.categoria)
-                        .Include(o => o.ofertas).Select(p => new ProductoDto
-                        {
-
-                            Id = p.Id,
-                            ImagenUrl=p.ImagenUrl,
-                            Descripcion=p.Descripcion,
-                            Nombre = p.Nombre,
-                            CategoriaId = p.CategoriaId,
-                            CategoriaNombre = p.categoria.Nombre,
-                            PrecioOriginal = p.precio,
-                            TieneOferta = p.ofertas.Any(op => fecha >= op.oferta.Fecha_inicio && fecha <= op.oferta.Fecha_fin),
-                            PrecioFinal = p.ofertas.Any(op => fecha >= op.oferta.Fecha_inicio && fecha <= op.oferta.Fecha_fin)
-    ? p.precio - (p.precio * (p.ofertas
-        .Where(op => fecha >= op.oferta.Fecha_inicio && fecha <= op.oferta.Fecha_fin)
-        .Select(op => op.oferta.MontoAdescontar)
-        .FirstOrDefault() / 100)) // <-- Usa 100.0 si tus precios son double/float
-    : p.precio
-                        })
-                        .ToListAsync();
-                   
                     return Ok(producto);
                 }
-                
                 else
                 {
-                    return NotFound(new { message = "No se encontraron productos" });
+                    return Ok(new RespuestaGenericaDto<EditarProductoDto>
+                    {
+                        IsSuccess = false,
+                        Mensaje = "no se encontraron productos"
+                    });
                 }
+
 
             }
             catch (Exception ex)
             {
-
-                return Ok(new { message = $"error{ex.Message}" });
+                throw new Exception("Error al obtener el producto: " + ex.Message);
 
 
             }
@@ -121,14 +110,20 @@ namespace EcomerceCon_Apis.Controllers
         [Route("ListarParaOferta")]
         public async Task<IActionResult> ListaNorma()
         {
-          var producto=await _context.Productos.Select(o=>new ListarProductosParaoOfertaDto
-            {
-               Id=o.Id,
-               Nombre=o.Nombre,
-            }
-                ).ToListAsync();
-            return Ok(producto);
+            var producto = await _producto.ListarParaOFerta();
 
+            if (producto != null)
+            {
+                return Ok(producto);
+            }
+            else
+            {
+                return BadRequest(new RespuestaGenericaDto<EditarProductoDto>
+                {
+                    IsSuccess = false,
+                    Mensaje = "no se encontraron productos"
+                });
+            }
         }
 
         [HttpPost]
@@ -138,31 +133,26 @@ namespace EcomerceCon_Apis.Controllers
         {
             try
             {
-                if (await _context.Productos.Where(n => n.Nombre == productoDto.Nombre).FirstOrDefaultAsync() == null)
+                var producto = await _producto.Create(productoDto);
+
+
+                if (await _context.Productos.Where(n => n.Nombre == producto.Nombre).FirstOrDefaultAsync() == null)
                 {
 
-                    if(productoDto.cantidad>0&&productoDto.precio>0)
-                    _context.Productos.Add(new Models.Producto
-                    {
-                        Nombre = productoDto.Nombre,
-                        Descripcion = productoDto.Descripcion,
-                        cantidad = productoDto.cantidad,
-                        ImagenUrl = productoDto.ImagenUrl,
-                        precio = productoDto.precio,
-                        CategoriaId = productoDto.CategoriaId
+                    _context.Add(producto);
 
-                    });
                     await _context.SaveChangesAsync();
                     return Ok(new { message = "Producto creado correctamente" });
                 }
-                else if (await _context.Productos.Where(n => n.Nombre == productoDto.Nombre).FirstOrDefaultAsync() != null)
+
+                else if (await _context.Productos.Where(n => n.Nombre == producto.Nombre).FirstOrDefaultAsync() != null)
                 {
-                    var pelota = await _context.Productos.Where(n => n.Nombre == productoDto.Nombre).FirstOrDefaultAsync();
-                    return Ok(new { message = "El producto ya existe" });
+                    var pelota = await _context.Productos.Where(n => n.Nombre == producto.Nombre).FirstOrDefaultAsync();
+                    return BadRequest(new { message = "El producto ya existe" });
                 }
                 else
                 {
-                    return Ok(new { message = "Intente mas tarde" });
+                    return BadRequest(new { message = "Intente mas tarde" });
 
                 }
 
@@ -171,7 +161,7 @@ namespace EcomerceCon_Apis.Controllers
             {
 
                 {
-                    return Ok(new { message = $"error{ex.Message}" });
+                    return BadRequest(new { message = $"error{ex.Message}" });
 
                 }
             }
@@ -184,38 +174,33 @@ namespace EcomerceCon_Apis.Controllers
         {
             try
             {
-                var producto = await _context.Productos.Include(c => c.categoria).Where(p => p.Id == Id).FirstOrDefaultAsync();
-                var dto = new RespuestaGenericaDto<EditarProductoDto>
-                {
-                    IsSuccess = true,
-                    Mensaje = "Producto encontrado",
-                    Data = new EditarProductoDto
-                    {
-                        Nombre = producto.Nombre,
-                        Descripcion = producto.Descripcion,
-                        cantidad = producto.cantidad,
-                        precio = producto.precio,
-                        ImagenUrl = producto.ImagenUrl,
-                        CategoriaId = producto.CategoriaId,
-                        // Uso del null-conditional por seguridad
-                    }
+                var pro = await _producto.Obtener(Id);
 
+                var producto = new RespuestaGenericaDto<EditarProductoDto>
+                {
+                    IsSuccess=true,
+                    Mensaje="producto obetenido",
+                    Data=pro
+                    
                 };
-                return Ok(dto);
+
+                if (producto != null)
+                {
+                    return Ok(producto);
+                }
+                else
+                {
+                    return BadRequest(new {message="se desconoce el producto"});
+                }
+
+
             }
             catch (Exception ex)
             {
-                return Ok(new RespuestaGenericaDto<EditarProductoDto>
-                {
-                    IsSuccess = false,
-                    Mensaje = "producto no encontrado"
-                });
+
+                throw new Exception("Error al obtener el producto: " + ex.Message);
+
             }
-
-
-
-
-
 
 
         }
@@ -224,29 +209,15 @@ namespace EcomerceCon_Apis.Controllers
         [ProducesResponseType(typeof(RespuestaGenericaDto<EditarProductoDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> Editar([FromBody] EditarProductoDto dto)
         {
-            bool prueba = await _context.Productos.AnyAsync(p => p.Id == dto.Id);
-
-            if (prueba)
+            try
             {
 
+                var produ = await _producto.Editar(dto);
 
-                _context.Update
-                        (
-                      new Producto
-                      {
-                          Id = dto.Id,
-                          Nombre = dto.Nombre,
-                          Descripcion = dto.Descripcion,
-                          cantidad = dto.cantidad,
-                          ImagenUrl = dto.ImagenUrl,
-                          CategoriaId = dto.CategoriaId,
-                          precio = dto.precio
-                      }
-                      );
-                var verificar = await _context.Productos.Where(n => n.Nombre == dto.Nombre).FirstOrDefaultAsync();
-                if (verificar == null && dto.cantidad > 0 && dto.precio > 0)
+                if (produ != null)
                 {
-                await _context.SaveChangesAsync();
+                    _context.Update(produ);
+                    await _context.SaveChangesAsync();
                     return Ok(new RespuestaGenericaDto<bool>
                     {
                         IsSuccess = true,
@@ -254,14 +225,29 @@ namespace EcomerceCon_Apis.Controllers
                         Data = true,
                     });
                 }
-                return Ok(new RespuestaGenericaDto<bool>
+                else
+                {
+                    return BadRequest(new RespuestaGenericaDto<bool>
+                    {
+                        IsSuccess = false,
+                        Mensaje = "Hubo un error al editar el producto",
+
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+
+                return BadRequest(new RespuestaGenericaDto<bool>
                 {
                     IsSuccess = false,
                     Mensaje = "Hubo un error al editar el producto",
-               
+
                 });
             }
-            return Ok();
+
+
+           
         }
 
 

@@ -31,20 +31,18 @@ namespace EcomerceCon_Apis.Controllers
         [HttpGet("RegistrarPago")]
         [AllowAnonymous]
         public async Task<IActionResult> RegistrarPago(
-    [FromQuery] string? type,
-    [FromQuery] string? topic,
-    [FromQuery] string? id,
-    [FromQuery] string? collection_id,
-    [FromBody] MercadoPagoWebhookDto? body)
+     [FromQuery] string? type,
+     [FromQuery(Name = "data.id")] string? dataId,
+     [FromBody] MercadoPagoWebhookDto? body)
+
         {
             {
-                var pagoId = id;
+                var pagoId = dataId ?? body?.Data?.Id;
 
                 if (string.IsNullOrEmpty(pagoId))
                     return Ok();
-
                 await _pagoservices.ProcesarPago(
-                    type, topic, id, collection_id, body);
+                    type, dataId, body);
                 await _pagoservices.VerificarPago(pagoId);
                 return Ok();
             }

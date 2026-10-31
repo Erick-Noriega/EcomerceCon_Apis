@@ -107,25 +107,34 @@ namespace EcomerceCon_Apis.Controllers
         public async Task<IActionResult> Lista()
         {
 
-            var email = _userManager.GetUserId(User);
-            var usuario = await _userManager.FindByEmailAsync(email) ?? await _userManager.FindByEmailAsync(email);
-            var usuarioId = usuario.Id;
-            var ca = await _context.Carritos.FirstOrDefaultAsync(c => c.UsuarioId == usuarioId);
-
-
-            var carrito=await _context.DetalleCarritos.Where(c=>c.CarritoId==ca.Id).Select(c=>new DetalleCarritoDto
+            try
             {
-                Id = c.Id,
-                ProductoId=c.ProductoId,
-                NombreProducto=c.producto.Nombre,
-                ImagenUrl=c.producto.ImagenUrl,
-                PrecioUnitario=c.PrecioPorUnidad,
-                Cantidad=c.cantidad,
+                var idusuario = _userManager.GetUserId(User);
 
-            })
-                .ToListAsync();
 
-            return Ok(carrito);
+                var ca = await _context.Carritos.FirstOrDefaultAsync(c => c.UsuarioId == idusuario);
+
+
+                var carrito = await _context.DetalleCarritos.Where(c => c.CarritoId == ca.Id).Select(c => new DetalleCarritoDto
+                {
+                    Id = c.Id,
+                    ProductoId = c.ProductoId,
+                    NombreProducto = c.producto.Nombre,
+                    ImagenUrl = c.producto.ImagenUrl,
+                    PrecioUnitario = c.PrecioPorUnidad,
+                    Cantidad = c.cantidad,
+
+                })
+                    .ToListAsync();
+
+                return Ok(carrito);
+            }
+            catch (Exception)
+            {
+
+                return Unauthorized();
+            }
+            
           
         }
 

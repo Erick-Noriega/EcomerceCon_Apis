@@ -27,14 +27,13 @@ namespace EcomerceCon_Apis.Services
         }
         public async Task ProcesarPago(
      [FromQuery] string? type,
-     [FromQuery] string? topic,
-     [FromQuery] string? id,
-     [FromQuery] string? collection_id,
+     [FromQuery(Name ="data.id")] string? dataId,
      [FromBody] MercadoPagoWebhookDto? body)
         {
-            string paymentIdStr = id ?? collection_id ?? body?.Data?.Id;
-
+ 
+             string paymentIdStr = dataId ?? body?.Data?.Id;
             if (string.IsNullOrEmpty(paymentIdStr))
+
             {
                 return;
             }
@@ -54,20 +53,20 @@ namespace EcomerceCon_Apis.Services
                 {
                     payment = await paymentClient.GetAsync(paymentId);
                 }
+
                 catch (Exception ex)
                 {
-                    // Si da error 404 o "Payment not found", es una notificación secundaria (ej. merchant_order)
-                    // Respondemos 200 OK para que MP no reintente este ID y esperamos la notificación del pago real
+
                     if (ex.Message.Contains("404") || ex.Message.Contains("not found"))
                     {
-                        return ;
+                        return;
                     }
 
-                    // Si es otro tipo de error, lo volvemos a lanzar o respondemos OK según tu estrategia
+
                     return;
                 }
 
-                // Si la API devolvió un pago válido y está aprobado
+     
                 if (payment != null && payment.Status == "approved")
                 {
                     if (!int.TryParse(payment.ExternalReference, out int pedidoId))
@@ -108,7 +107,6 @@ namespace EcomerceCon_Apis.Services
 
                     _context.Pagos.Add(nuevoPago);
 
-                    // Actualizar Estado del Pedido
                     pedido.estadoPedido = EstadoPedido.EnPreparacion;
 
                     // Vaciar Carrito
@@ -163,11 +161,11 @@ namespace EcomerceCon_Apis.Services
             if (pedido == null)
                 return;
 
-            var telefono = await _context.Users
-                .Where(u => u.Id == pedido.UsuarioId)
-                .Select(u => u.Numero_telefono)
-                .FirstOrDefaultAsync();
-
+            //   var telefono = await _context.Users
+            //       .Where(u => u.Id == pedido.UsuarioId)
+            //       .Select(u => u.Numero_telefono)
+            //       .FirstOrDefaultAsync();
+            string telefono = "543516341130";
             if (string.IsNullOrEmpty(telefono))
                 return;
 

@@ -7,9 +7,7 @@ namespace EcomerceCon_Apis.Services
     {
 
         Task ProcesarPago([FromQuery] string? type,
-     [FromQuery] string? topic,
-     [FromQuery] string? id,
-     [FromQuery] string? collection_id,
+     [FromQuery(Name = "data.id")] string? dataId,
      [FromBody] MercadoPagoWebhookDto? body);
 
         Task VaciarCarritoDelUsuario(string usuarioId);

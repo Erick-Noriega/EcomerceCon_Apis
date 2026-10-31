@@ -82,7 +82,9 @@ namespace EcomerceCon_Apis.Controllers
             }
             else if(comprobar!=null)
             {
-                pedido.Id=comprobar.Id;
+               pedido.Id = comprobar.Id;
+                comprobar.DireccionDeEnvio=pedido.DireccionDeEnvio;
+                comprobar.fecha_pedido = pedido.fecha_pedido;
             }
                 await _context.SaveChangesAsync();
           

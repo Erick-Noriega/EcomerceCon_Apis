@@ -11,5 +11,6 @@ namespace EcomerceCon_Apis.Models
         public DateTime Fecha_nac { get; set; }
         public string? Numero_telefono { get; set; }
         List<Pedido>? pedidos { get; set; }
+
     }
 }

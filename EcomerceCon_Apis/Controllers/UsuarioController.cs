@@ -48,7 +48,9 @@ namespace EcomerceCon_Apis.Controllers
                 };
                 _contex.Add(nuevocarrito);
                 await _contex.SaveChangesAsync();
-                
+                _contex.UserRoles.Add(new IdentityUserRole<string> { UserId = usuario.Id, RoleId = "2" });
+                await _contex.SaveChangesAsync();
+
                 return Ok(new { mensaje = "Usuario registrado correctamente y se creo el carrito" });
             }
             else if(await _userManager.FindByEmailAsync(request.Correo)!=null)

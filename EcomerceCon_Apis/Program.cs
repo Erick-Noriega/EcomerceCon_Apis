@@ -1,13 +1,14 @@
 using EcomerceCon_Apis.Data;
 using EcomerceCon_Apis.Models;
+using EcomerceCon_Apis.Services;
+using MercadoPago.Config;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Security.Claims;
 using System.Text;
-using MercadoPago.Config;
-using EcomerceCon_Apis.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 var mpAccesToken = builder.Configuration["MercadoPago:AccesToken"];
@@ -15,36 +16,51 @@ if (!string.IsNullOrEmpty(mpAccesToken))
 {
     MercadoPagoConfig.AccessToken = mpAccesToken;
 }
-builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
-var secretKey = builder.Configuration.GetSection("Jwt").GetValue<string>("SecretKey");
+
+builder.Services.Configure<JwtSettings>(
+    builder.Configuration.GetSection("Jwt"));
+
+var secretKey = builder.Configuration
+    .GetSection("Jwt")
+    .GetValue<string>("SecretKey");
+
 var keyBytes = Encoding.UTF8.GetBytes(secretKey);
+
 builder.Services.AddMemoryCache();
-builder.Services.AddAuthentication
-    (
-    config =>
+
+builder.Services.AddAuthentication(config =>
+{
+    config.DefaultAuthenticateScheme =
+        JwtBearerDefaults.AuthenticationScheme;
+
+    config.DefaultChallengeScheme =
+        JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(config =>
+{
+    config.RequireHttpsMetadata = false;
+    config.SaveToken = true;
+
+    config.TokenValidationParameters = new TokenValidationParameters
     {
-        config.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        config.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    }).AddJwtBearer(config =>
-    {
-        config.RequireHttpsMetadata = false;
-        config.SaveToken = true;
-        config.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
-            ValidateIssuer = false,
-            ValidateAudience = false,
-        };
-    });
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
+
+        ValidateIssuer = false,
+        ValidateAudience = false,
+
+        RoleClaimType = ClaimTypes.Role
+    };
+});
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5023") // Tu cliente frontend exacto (SIN barra al final)
+        policy.WithOrigins("http://localhost:5023")
               .AllowAnyMethod()
               .AllowAnyHeader()
-              .AllowCredentials(); // Habilita el envío de cookies/credenciales
+              .AllowCredentials(); 
     });
 });
 
@@ -67,6 +83,7 @@ o.UseSqlServer(builder.Configuration.GetConnectionString("Conexion")));
     }).AddEntityFrameworkStores<ProductosDbcontext>();
 builder.Services.AddScoped<IWhatsappService,WhattsapServices>();
 builder.Services.AddScoped<IPagoService,PagosServices>();
+builder.Services.AddScoped<IProductosService, ProductoService>();
 builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
     var app = builder.Build();
