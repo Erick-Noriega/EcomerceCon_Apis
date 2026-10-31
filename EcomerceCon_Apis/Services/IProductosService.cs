@@ -9,9 +9,9 @@ namespace EcomerceCon_Apis.Services
          Task<List<ProductoDtoParaAminds>> ListaDeAdmins();
         Task<List<ProductoDto>> lista();
         Task <List<ListarProductosParaoOfertaDto>>ListarParaOFerta();
-        Task<Producto> Create(CrearProductoDto productoDto);
+        Task Create(CrearProductoDto productoDto);
         Task<EditarProductoDto> Obtener(int Id);
-        Task <Producto>Editar(EditarProductoDto dto);
+        Task Editar(EditarProductoDto dto);
 
     }
 }

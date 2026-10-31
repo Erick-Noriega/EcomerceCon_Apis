@@ -3,6 +3,7 @@ using EcomerceCon_Apis.Dtos;
 using EcomerceCon_Apis.Dtos.Ofertas;
 using EcomerceCon_Apis.Dtos.Producto;
 using EcomerceCon_Apis.Models;
+using EcomerceCon_Apis.Properties.Repository;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
@@ -12,10 +13,12 @@ namespace EcomerceCon_Apis.Services
     public class ProductoService : IProductosService
     {
         private readonly ProductosDbcontext _context;
+        private readonly IProductoRepository _repo;
 
-        public ProductoService(ProductosDbcontext context)
+        public ProductoService(ProductosDbcontext context, IProductoRepository repo)
         {
             _context = context;
+            _repo = repo;
         }
         public async Task<List<ProductoDtoParaAminds>> ListaDeAdmins()
         {
@@ -23,28 +26,29 @@ namespace EcomerceCon_Apis.Services
             var fecha = DateTime.Now;
             try
             {
-                var producto = await _context.Productos.Include(c => c.categoria).Include(o => o.ofertas)
-                .Select(p => new ProductoDtoParaAminds
-                {
+                var producto = await _repo.ListaDeAdmins();
+                var dto = await _context.Productos.Include(c => c.categoria).Include(o => o.ofertas)
+                 .Select(p => new ProductoDtoParaAminds
+                 {
 
-                    Id = p.Id,
+                     Id = p.Id,
 
-                    Nombre = p.Nombre,
-                    CategoriaId = p.CategoriaId,
-                    ImagenUrl = p.ImagenUrl,
-                    Cantidad = p.cantidad,
-                    tieneoferta = p.ofertas.Any(op => fecha >= op.oferta.Fecha_inicio && fecha <= op.oferta.Fecha_fin),
-                    CategoriaNombre = p.categoria.Nombre,
-                    PrecioOriginal = p.precio,
-                    PrecioFinal = p.ofertas.Any(op => fecha >= op.oferta.Fecha_inicio && fecha <= op.oferta.Fecha_fin)
-    ? p.precio - (p.precio * (p.ofertas
-        .Where(op => fecha >= op.oferta.Fecha_inicio && fecha <= op.oferta.Fecha_fin)
-        .Select(op => op.oferta.MontoAdescontar)
-        .FirstOrDefault() / 100)) // <-- Usa 100.0 si tus precios son double/float
-    : p.precio
+                     Nombre = p.Nombre,
+                     CategoriaId = p.CategoriaId,
+                     ImagenUrl = p.ImagenUrl,
+                     Cantidad = p.cantidad,
+                     tieneoferta = p.ofertas.Any(op => fecha >= op.oferta.Fecha_inicio && fecha <= op.oferta.Fecha_fin),
+                     CategoriaNombre = p.categoria.Nombre,
+                     PrecioOriginal = p.precio,
+                     PrecioFinal = p.ofertas.Any(op => fecha >= op.oferta.Fecha_inicio && fecha <= op.oferta.Fecha_fin)
+     ? p.precio - (p.precio * (p.ofertas
+         .Where(op => fecha >= op.oferta.Fecha_inicio && fecha <= op.oferta.Fecha_fin)
+         .Select(op => op.oferta.MontoAdescontar)
+         .FirstOrDefault() / 100)) // <-- Usa 100.0 si tus precios son double/float
+     : p.precio
 
-                }).ToListAsync();
-                return producto;
+                 }).ToListAsync();
+                return dto;
 
 
             }
@@ -85,7 +89,7 @@ namespace EcomerceCon_Apis.Services
     ? p.precio - (p.precio * (p.ofertas
         .Where(op => fecha >= op.oferta.Fecha_inicio && fecha <= op.oferta.Fecha_fin)
         .Select(op => op.oferta.MontoAdescontar)
-        .FirstOrDefault() / 100)) 
+        .FirstOrDefault() / 100))
     : p.precio
                         })
                         .ToListAsync();
@@ -103,7 +107,7 @@ namespace EcomerceCon_Apis.Services
             catch (Exception ex)
             {
                 throw new Exception("Error al obtener la lista de productos: " + ex.Message);
-                
+
 
 
             }
@@ -124,13 +128,13 @@ namespace EcomerceCon_Apis.Services
             catch (Exception ex)
             {
 
-               throw new Exception("Error al listar productos para oferta: " + ex.Message);
+                throw new Exception("Error al listar productos para oferta: " + ex.Message);
             }
-           
-     
+
+
         }
 
-        public async Task<Producto> Create(CrearProductoDto productoDto)
+        public async Task Create(CrearProductoDto productoDto)
         {
             var producto = new Producto
             {
@@ -143,7 +147,7 @@ namespace EcomerceCon_Apis.Services
             };
             if (producto.cantidad > 0 && producto.precio > 0)
             {
-                return producto;
+                await _repo.AgregarProducto(producto);
             }
             else
             {
@@ -162,7 +166,10 @@ namespace EcomerceCon_Apis.Services
             {
                 if (productoId >= 1)
                 {
-                    var producto = await _context.Productos.Include(c => c.categoria).Where(p => p.Id == productoId).FirstOrDefaultAsync();
+                    var producto = await _repo.Obtener(productoId);
+
+
+
                     var dto = new EditarProductoDto
                     {
                         Nombre = producto.Nombre,
@@ -174,7 +181,7 @@ namespace EcomerceCon_Apis.Services
                         // Uso del null-conditional por seguridad
                     };
 
-                    
+
                     return dto;
                 }
                 else
@@ -189,41 +196,43 @@ namespace EcomerceCon_Apis.Services
             }
 
         }
-        public async Task<Producto> Editar(EditarProductoDto dto)
+        public async Task Editar(EditarProductoDto dto)
         {
-            bool prueba = await _context.Productos.AnyAsync(p => p.Id == dto.Id);
+            var existencia = await _repo.Obtener(dto.Id);
             try
             {
 
-                if (prueba==true&&dto.Id>0&&dto.cantidad>0&&dto.precio>0)
+                if (existencia != null && dto.Id > 0 && dto.cantidad > 0 && dto.precio > 0)
                 {
-                    var produ =
-                  new Producto
-                  {
-                      Id = dto.Id,
-                      Nombre = dto.Nombre,
-                      Descripcion = dto.Descripcion,
-                      cantidad = dto.cantidad,
-                      ImagenUrl = dto.ImagenUrl,
-                      CategoriaId = dto.CategoriaId,
-                      precio = dto.precio,
-                  };
-                    return produ;
+
+
+
+                    existencia.Nombre = dto.Nombre;
+                    existencia.Descripcion = dto.Descripcion;
+                    existencia.cantidad = dto.cantidad;
+                    existencia.ImagenUrl = dto.ImagenUrl;
+                    existencia.CategoriaId = dto.CategoriaId;
+                    existencia.precio = dto.precio;
+                    await _repo.GuardarCambios();
                 }
+
+
+
+
                 else
                 {
-                throw new Exception("Error al obtener el producto");
+                    throw new Exception("Error al obtener el producto");
 
                 }
-            }
 
+            }
             catch (Exception ex)
             {
 
                 throw new Exception("Error al obtener el producto: " + ex.Message);
 
             }
-
+        
 
 
         }

@@ -1,4 +1,6 @@
 ﻿using EcomerceCon_Apis.Dtos.Pagos;
+using EcomerceCon_Apis.Models;
+using MercadoPago.Resource.Preference;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EcomerceCon_Apis.Services
@@ -12,5 +14,6 @@ namespace EcomerceCon_Apis.Services
 
         Task VaciarCarritoDelUsuario(string usuarioId);
         Task VerificarPago(string pagoId);
+        Task<Preference> GenerarPreferenciaDePago(string PedidoId,Carrito c);
     }
 }

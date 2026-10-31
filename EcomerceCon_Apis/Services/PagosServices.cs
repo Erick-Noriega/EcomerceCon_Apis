@@ -2,7 +2,9 @@
 using EcomerceCon_Apis.Dtos.Pagos;
 using EcomerceCon_Apis.Models;
 using MercadoPago.Client.Payment;
+using MercadoPago.Client.Preference;
 using MercadoPago.Resource.Payment;
+using MercadoPago.Resource.Preference;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -25,6 +27,40 @@ namespace EcomerceCon_Apis.Services
             _paymentClient = new PaymentClient();
                
         }
+
+        public async Task<Preference> GenerarPreferenciaDePago(string pedidoId,Carrito c)
+        {
+            var client = new PreferenceClient();
+            var prefencelient = new PreferenceRequest
+            {
+                ExternalReference = pedidoId,
+                Items = c.DetalleCarrito.Select(item => new PreferenceItemRequest
+                {
+                    Title = item.producto!.Nombre,
+                    Quantity = item.cantidad,
+                    CurrencyId = "ARS",
+                    UnitPrice = (decimal)item.PrecioPorUnidad
+                }).ToList(),
+                BackUrls = new PreferenceBackUrlsRequest
+                {
+                    Success = "https://localhost:5023/Pedido/Pago_exitoso",
+                    Failure = "http://localhost:5023/Pedido/Fallido",
+                    Pending = "https://localhost:5023/Pedido/Pendiente"
+                },
+
+
+                NotificationUrl = "https://scarcity-growl-sectional.ngrok-free.dev/api/Pagos/RegistrarPago",
+                AutoReturn = "approved",
+            };
+            Preference preference = await client.CreateAsync(prefencelient);
+            //await transaction.CommitAsync();
+
+            return preference;
+
+
+        }
+
+
         public async Task ProcesarPago(
      [FromQuery] string? type,
      [FromQuery(Name ="data.id")] string? dataId,
@@ -74,7 +110,7 @@ namespace EcomerceCon_Apis.Services
                         return ;
                     }
 
-                    using var transaction = await _context.Database.BeginTransactionAsync();
+                 
                     var pedido = await _context.Pedidos
      .Include(p => p.detallePedido)
          .ThenInclude(d => d.producto)
@@ -91,6 +127,7 @@ namespace EcomerceCon_Apis.Services
                         if (detalle.producto != null)
                         {
                             detalle.producto.cantidad = Math.Max(0, detalle.producto.cantidad - detalle.Cantidad);
+                            
                         }
                     }
 
@@ -113,7 +150,7 @@ namespace EcomerceCon_Apis.Services
                     await VaciarCarritoDelUsuario(pedido.UsuarioId);
 
                     await _context.SaveChangesAsync();
-                    await transaction.CommitAsync();
+      
                 }
 
                 return;

@@ -39,21 +39,14 @@ namespace EcomerceCon_Apis.Controllers
             {
 
                 var producto = await _producto.ListaDeAdmins();
-                if (producto != null)
-                {
+               
 
                     return Ok(producto);
-                }
-                else
-                {
-                    return BadRequest(new RespuestaGenericaDto<EditarProductoDto>
-                    {
-                        IsSuccess = false,
-                        Mensaje = "error,no se econtraron productos"
+                
+               
+                 
 
-                    });
-
-                }
+                
             }
             catch (Exception)
             {
@@ -131,41 +124,21 @@ namespace EcomerceCon_Apis.Controllers
         [ProducesResponseType(typeof(RespuestaGenericaDto<CrearProductoDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> Crear([FromBody] CrearProductoDto productoDto)
         {
+
             try
             {
-                var producto = await _producto.Create(productoDto);
+          
+                await _producto.Create(productoDto);
+                return Ok();
 
-
-                if (await _context.Productos.Where(n => n.Nombre == producto.Nombre).FirstOrDefaultAsync() == null)
-                {
-
-                    _context.Add(producto);
-
-                    await _context.SaveChangesAsync();
-                    return Ok(new { message = "Producto creado correctamente" });
-                }
-
-                else if (await _context.Productos.Where(n => n.Nombre == producto.Nombre).FirstOrDefaultAsync() != null)
-                {
-                    var pelota = await _context.Productos.Where(n => n.Nombre == producto.Nombre).FirstOrDefaultAsync();
-                    return BadRequest(new { message = "El producto ya existe" });
-                }
-                else
-                {
-                    return BadRequest(new { message = "Intente mas tarde" });
-
-                }
 
             }
-            catch (Exception ex)
+            catch (Exception)
             {
 
-                {
-                    return BadRequest(new { message = $"error{ex.Message}" });
-
-                }
+                return BadRequest();
             }
-
+                
         }
         [HttpGet]
         [Route("Obtener/{Id:int}")]
@@ -212,28 +185,10 @@ namespace EcomerceCon_Apis.Controllers
             try
             {
 
-                var produ = await _producto.Editar(dto);
-
-                if (produ != null)
-                {
-                    _context.Update(produ);
-                    await _context.SaveChangesAsync();
-                    return Ok(new RespuestaGenericaDto<bool>
-                    {
-                        IsSuccess = true,
-                        Mensaje = "Producto Editado Correctamente",
-                        Data = true,
-                    });
-                }
-                else
-                {
-                    return BadRequest(new RespuestaGenericaDto<bool>
-                    {
-                        IsSuccess = false,
-                        Mensaje = "Hubo un error al editar el producto",
-
-                    });
-                }
+                await _producto.Editar(dto);
+                return Ok();
+                
+                
             }
             catch (Exception ex)
             {

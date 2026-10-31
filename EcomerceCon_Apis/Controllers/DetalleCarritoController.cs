@@ -52,9 +52,7 @@ namespace EcomerceCon_Apis.Controllers
 
                 var precioFinal=producto.Select(p=>p.PrecioFinal).FirstOrDefault();
 
-                var email = _userManager.GetUserId(User);
-                var usuario = await _userManager.FindByEmailAsync(email) ?? await _userManager.FindByEmailAsync(email);
-                var usuarioId = usuario.Id;
+                var usuarioId = _userManager.GetUserId(User);
                 var carrito=await _context.Carritos.FirstOrDefaultAsync(c=>c.UsuarioId==usuarioId);
                 if (carrito == null)
                 {

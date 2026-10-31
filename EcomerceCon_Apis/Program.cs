@@ -1,5 +1,6 @@
 using EcomerceCon_Apis.Data;
 using EcomerceCon_Apis.Models;
+using EcomerceCon_Apis.Properties.Repository;
 using EcomerceCon_Apis.Services;
 using MercadoPago.Config;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -84,6 +85,9 @@ o.UseSqlServer(builder.Configuration.GetConnectionString("Conexion")));
 builder.Services.AddScoped<IWhatsappService,WhattsapServices>();
 builder.Services.AddScoped<IPagoService,PagosServices>();
 builder.Services.AddScoped<IProductosService, ProductoService>();
+builder.Services.AddScoped<IProductoRepository, ProductoRepsitory>();
+builder.Services.AddScoped<IPedidoRepository, PedidoRepository>();
+builder.Services.AddScoped<IPedidoService, PedidoServices>();
 builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
     var app = builder.Build();
