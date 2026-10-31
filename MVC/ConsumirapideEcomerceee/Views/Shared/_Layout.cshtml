@@ -1,0 +1,113 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - ConsumirapideEcomerceee</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/ConsumirapideEcomerceee.styles.css" asp-append-version="true" />
+    <style>
+            body {
+                background-color: #121212 !important;
+                color: #ffffff;
+            }
+
+            .navbar-dark {
+                background-color: #1a1a1a !important;
+            }
+
+            /* Garantiza que el footer sea parte del flujo normal */
+            footer {
+                background-color: #121212 !important;
+                position: relative !important;
+                clear: both;
+            }
+    </style>
+</head>
+<body class="d-flex flex-column min-vh-100 bg-dark text-white">
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-dark border-bottom border-secondary mb-3 shadow-sm">
+            <div class="container-fluid px-4">
+                <a class="navbar-brand fw-bold text-white" asp-area="" asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-bag-check-fill text-primary me-2"></i>Proyecto
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link text-white-50" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                        </li>
+
+                        <!-- Desplegable de Oferta -->
+                        @if (User.IsInRole("Admin"))
+                            {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-white-50" href="#" id="navbarDropdownOferta" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-tag-fill me-1"></i>Oferta
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-dark bg-dark border-secondary" aria-labelledby="navbarDropdownOferta">
+                                    <li><a class="dropdown-item text-white-50" asp-controller="Oferta" asp-action="Index">Index</a></li>
+                                    <li><a class="dropdown-item text-white-50" asp-controller="Oferta" asp-action="Create">Create</a></li>
+                                    <li><a class="dropdown-item text-white-50" asp-controller="Oferta" asp-action="Edit">Editar</a></li>
+                                </ul>
+                            </li>
+
+                                
+                            }
+                           
+                        <!-- Desplegable de Productos -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-white-50" href="#" id="navbarDropdownProducto" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-grid-fill me-1"></i>Productos
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-dark bg-dark border-secondary" aria-labelledby="navbarDropdownProducto">
+                                <li><a class="dropdown-item text-white-50" asp-controller="Producto" asp-action="Index">Index</a></li>
+                                <li><a class="dropdown-item text-white-50" asp-controller="Producto" asp-action="Create">Create</a></li>
+                            </ul>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link text-white-50" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                        </li>
+                    </ul>
+
+                    <ul class="navbar-nav ms-auto align-items-center gap-2">
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-outline-light border-secondary text-white px-3" asp-area="" asp-controller="DetaleCarrito" asp-action="Index">
+                                <i class="bi bi-cart3 me-1"></i> Carrito
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-primary text-white px-3 fw-bold" asp-area="" asp-controller="Usuario" asp-action="Validar">
+                                <i class="bi bi-person-circle me-1"></i> Login
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Contenido Principal -->
+    <main role="main" class="flex-grow-1 pb-5">
+        @RenderBody()
+    </main>
+
+    <!-- Footer Flujo Normal -->
+    <footer class="border-top border-secondary py-3 text-muted mt-auto">
+        <div class="container text-center text-white-50">
+            &copy; 2026 - ConsumirapideEcomerceee - <a class="text-white-50 text-decoration-underline" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

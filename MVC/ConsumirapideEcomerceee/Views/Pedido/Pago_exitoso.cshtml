@@ -1,0 +1,304 @@
+﻿<!-- ================= MAIN CONTENT ================= -->
+<main class="pt-5 mt-4">
+    <div class="container max-w-7xl py-5">
+
+        <!-- HEADER HERO: Confirmación -->
+        <div class="text-center max-w-3xl mx-auto mb-5">
+
+            <!-- Status Pill -->
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1.5 rounded-pill bg-k-card shadow-sm mb-4 border border-k">
+                <span class="pulse-dot"></span>
+                <span class="badge-caps text-white">CONFIRMACIÓN DE PEDIDO</span>
+                <span class="text-k-muted small">/</span>
+                <span class="badge-caps text-k-muted font-monospace">LAB-AUTH: 0x9F4C</span>
+            </div>
+
+            <!-- Checkmark Icon Circle -->
+            <div class="d-flex justify-content-center mb-4">
+                <div class="rounded-circle bg-k-card d-flex align-items-center justify-content-center shadow-lg" style="width: 80px; height: 80px;">
+                    <div class="rounded-circle bg-k-highlight d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
+                        <span class="material-symbols-outlined text-white display-6 fw-bold">check</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Headline -->
+            <h1 class="display-5 font-syne fw-bold text-white tracking-tight mb-3">
+                Pago Confirmado. Pedido en Preparación.
+            </h1>
+            <p class="text-k-secondary fs-5 max-w-2xl mx-auto">
+                Tu orden <span class="fw-semibold text-white font-monospace">#KN-94820</span> ha sido procesada con éxito y transferida al laboratorio de ensamblaje y calibración acústica.
+            </p>
+        </div>
+
+        <!-- GRID PRINCIPAL (2 COLUMNAS) -->
+        <div class="row g-4">
+
+            <!-- COLUMNA IZQUIERDA: Timeline y Certificaciones -->
+            <div class="col-lg-7 d-flex flex-column gap-4">
+
+                <!-- Card de Monitoreo -->
+                <div class="bg-k-card rounded-4 p-4 p-lg-5 shadow-sm border border-k">
+
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4 pb-3 border-bottom border-k">
+                        <div>
+                            <span class="badge-caps text-k-muted d-block mb-1">REGISTRO DE MONITOREO</span>
+                            <h2 class="h5 text-white font-syne mb-0">Estado de Manufactura y Entrega</h2>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 bg-k-inner px-3 py-1.5 rounded-pill border border-k">
+                            <span class="badge-caps text-k-muted" style="font-size: 9px;">DHL PRIORITARIO</span>
+                            <span class="badge-caps text-white font-monospace">DHL-EX-992104-ES</span>
+                        </div>
+                    </div>
+
+                    <!-- Timeline -->
+                    <div class="timeline-container">
+
+                        <!-- Paso 1 -->
+                        <div class="timeline-step">
+                            <div class="timeline-icon bg-white text-dark">
+                                <span class="material-symbols-outlined" style="font-size: 14px; font-weight: bold;">done</span>
+                            </div>
+                            <div class="bg-k-inner rounded-3 p-3 shadow-sm border border-k">
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                    <span class="fw-semibold text-white small">1. Pago Aprobado & Autenticado</span>
+                                    <span class="badge-caps text-k-muted font-monospace">HOY 14:32:08 CET</span>
+                                </div>
+                                <p class="text-k-secondary small mb-0 mt-1">Transacción completada bajo protocolo de enclave criptográfico. Fondos conciliados.</p>
+                            </div>
+                        </div>
+
+                        <!-- Paso 2 (Activo) -->
+                        <div class="timeline-step">
+                            <div class="timeline-icon bg-k-highlight">
+                                <span class="pulse-dot"></span>
+                            </div>
+                            <div class="bg-k-inner rounded-3 p-3 shadow-sm border border-k">
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="fw-bold text-white small">2. Ensamblaje y Calibración Acústica</span>
+                                        <span class="badge bg-k-highlight text-white badge-caps">ACTIVO AHORA</span>
+                                    </div>
+                                    <span class="badge-caps text-k-secondary font-monospace">EST: 24 - 48 HRS</span>
+                                </div>
+                                <p class="text-k-secondary small mb-0 mt-2">
+                                    Banco de pruebas anecoico #04. Asignación de transductores balanceados y alineación de titanio grado aeroespacial.
+                                </p>
+                                <div class="mt-3 pt-2 border-top border-k d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="material-symbols-outlined text-white fs-6">graphic_eq</span>
+                                        <span class="small font-monospace text-white">Curva de Tolerancia Armónica: ±0.15 dB</span>
+                                    </div>
+                                    <span class="badge-caps text-k-muted">LOTE #KN-ALPHA</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Paso 3 -->
+                        <div class="timeline-step opacity-50">
+                            <div class="timeline-icon bg-k-highlight">
+                                <span class="rounded-circle bg-k-muted" style="width: 6px; height: 6px;"></span>
+                            </div>
+                            <div class="bg-k-inner rounded-3 p-3 border border-k">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-semibold text-white small">3. Embalaje Sellado al Vacío Antiestático</span>
+                                    <span class="badge-caps text-k-muted">FASE 3</span>
+                                </div>
+                                <p class="text-k-muted small mb-0 mt-1">Cápsula de atmósfera controlada con gas inerte para preservación molecular de diafragmas.</p>
+                            </div>
+                        </div>
+
+                        <!-- Paso 4 -->
+                        <div class="timeline-step opacity-50">
+                            <div class="timeline-icon bg-k-highlight">
+                                <span class="rounded-circle bg-k-muted" style="width: 6px; height: 6px;"></span>
+                            </div>
+                            <div class="bg-k-inner rounded-3 p-3 border border-k">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-semibold text-white small">4. Despacho Express DHL Global con Custodia</span>
+                                    <span class="badge-caps text-k-muted">FASE 4</span>
+                                </div>
+                                <p class="text-k-muted small mb-0 mt-1">Entrega prioritaria internacional asegurada de extremo a extremo con firma de recepción.</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Card de Garantía y Concierge -->
+                <div class="bg-k-card rounded-4 p-4 shadow-sm border border-k">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <span class="material-symbols-outlined text-white fs-5">verified</span>
+                        <h3 class="h6 text-white font-syne mb-0">Garantía de Calibración & Concierge</h3>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="bg-k-inner p-3 rounded-3 border border-k h-100">
+                                <span class="badge-caps text-k-muted d-block mb-1">CERTIFICACIÓN INDIVIDUAL</span>
+                                <p class="text-k-secondary small mb-0">Cada unidad incluye un informe físico firmado con el gráfico FFT de respuesta de frecuencia único de tus auriculares.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="bg-k-inner p-3 rounded-3 border border-k h-100">
+                                <span class="badge-caps text-k-muted d-block mb-1">INGENIERO DEDICADO</span>
+                                <p class="text-k-secondary small mb-0">Tu pedido cuenta con soporte técnico directo 24/7 para asesoría en emparejamiento con DACs e impedancias.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- COLUMNA DERECHA: Resumen de Compra y Botones -->
+            <div class="col-lg-5 d-flex flex-column gap-4">
+
+                <div class="bg-k-card rounded-4 p-4 p-lg-4 shadow-sm border border-k">
+
+                    <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-k">
+                        <span class="badge-caps text-k-muted">ARTÍCULOS EN PROCESO</span>
+                        <span class="badge bg-k-inner text-white border border-k badge-caps px-2 py-1">2 UNIDADES</span>
+                    </div>
+
+                    <!-- Lista de Productos -->
+                    <div class="d-flex flex-column gap-3 py-2">
+
+                        <!-- Item 1 -->
+                        <div class="d-flex align-items-center gap-3 bg-k-inner p-3 rounded-3 border border-k">
+                            <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDOTwc4DcQkmX8B-gr1zdrmOl3olTcGSrtDUBKPT1sjGlbts48FC2NA4YkY5r94FQTJlAT8W_IZyi1hIV1VcGH7BfJc-aN7XOAg2JabNAQoaI6vFLBvGv_5VGtX7auQIbe7ITCyXkHbNEAFFBWqk8B8FDH99gf0emZvoKfMBNo9sP_VvlT588A_hTAItOhlImEk8c01e-zDm6GHlcgtzS82yCtbc_y3GcN8QpYeMcQVhQvtcYprpL4" class="rounded object-fit-cover flex-shrink-0" width="64" height="64" alt="Aura Pro Studio">
+                            <div class="flex-grow-1 min-w-0">
+                                <div class="d-flex justify-content-between align-items-start gap-2">
+                                    <h4 class="h6 text-white text-truncate mb-0">Kinesis Aura Pro Studio</h4>
+                                    <span class="fw-bold text-white small font-monospace">549,00 €</span>
+                                </div>
+                                <span class="text-k-muted small d-block">Acabado: Negro Obsidiana / Titanio</span>
+                                <span class="badge-caps text-k-secondary mt-1 d-block" style="font-size: 9px;">CANTIDAD: 1 • LAB SERIAL ID: AP-4029</span>
+                            </div>
+                        </div>
+
+                        <!-- Item 2 -->
+                        <div class="d-flex align-items-center gap-3 bg-k-inner p-3 rounded-3 border border-k">
+                            <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCq9-hnnH_K6Lnwy3D2yHsAlzGaiQLfvHwuDrC3c5__l1bCWy8J0V9Vuor2znsSbaBIZ1rR7Jn1bJ27m69XElYcoHM4NvvrIUiilOKdDqNNQiYcPPOQ2Zrbb65aqVCrfvoQN23FTcMMGTNIB_bqle-yEQvFPsqUTFQgqulpvHpVpv4_GGupFWcY1zLHD-dnq51m8X3QI6jEfK5NkM1ib32P7HHE8kVA8mT32W7OJ2_uXYrtHQ-KtKA" class="rounded object-fit-cover flex-shrink-0" width="64" height="64" alt="Cable Balanceado">
+                            <div class="flex-grow-1 min-w-0">
+                                <div class="d-flex justify-content-between align-items-start gap-2">
+                                    <h4 class="h6 text-white text-truncate mb-0">Cable Balanceado 4.4mm Plata</h4>
+                                    <span class="fw-bold text-white small font-monospace">161,50 €</span>
+                                </div>
+                                <span class="text-k-muted small d-block">Litz OCC 8-Core • Baño de Rodio</span>
+                                <span class="badge-caps text-k-secondary mt-1 d-block" style="font-size: 9px;">CANTIDAD: 1 • LONGITUD: 1.8M</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Desglose de Precios -->
+                    <div class="pt-3 border-top border-k d-flex flex-column gap-2">
+                        <div class="d-flex justify-content-between small">
+                            <span class="text-k-muted">Subtotal de Hardware</span>
+                            <span class="text-k-secondary font-monospace">710,50 €</span>
+                        </div>
+                        <div class="d-flex justify-content-between small">
+                            <span class="text-k-muted">Descuento de Lanzamiento (10%)</span>
+                            <span class="text-white font-monospace">-71,05 €</span>
+                        </div>
+                        <div class="d-flex justify-content-between small">
+                            <div class="d-flex align-items-center gap-1">
+                                <span class="text-k-muted">Envío DHL Express Prioritario</span>
+                                <span class="badge bg-k-inner text-white badge-caps" style="font-size: 8px;">CORTESÍA</span>
+                            </div>
+                            <span class="text-white font-monospace">0,00 €</span>
+                        </div>
+                        <div class="d-flex justify-content-between small">
+                            <span class="text-k-muted">Impuestos Aplicados (IVA 21%)</span>
+                            <span class="text-k-secondary font-monospace">Incluido</span>
+                        </div>
+
+                        <!-- Total Final -->
+                        <div class="mt-3 p-3 bg-k-inner rounded-3 border border-k d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="badge-caps text-k-muted d-block">TOTAL LIQUIDADO</span>
+                                <span class="badge-caps text-k-secondary" style="font-size: 9px;">Factura Oficial Generada</span>
+                            </div>
+                            <span class="fs-4 font-syne fw-bold text-white font-monospace">639,45 €</span>
+                        </div>
+                    </div>
+
+                    <!-- Método de Pago -->
+                    <div class="mt-3 p-3 bg-k-inner rounded-3 border border-k d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="material-symbols-outlined text-white fs-3">credit_card</span>
+                            <div class="d-flex flex-col">
+                                <span class="fw-semibold text-white small d-block">Apple Pay</span>
+                                <span class="text-k-muted small">Tarjeta Terminada en •••• 4291</span>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-1 text-white">
+                            <span class="material-symbols-outlined fs-6">lock</span>
+                            <span class="badge-caps font-monospace" style="font-size: 9px;">ENCLAVE SEGURO</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="d-flex flex-column gap-2">
+                    <a href="#" class="btn btn-light btn-lg rounded-pill fw-bold fs-6 py-3 shadow d-flex align-items-center justify-content-center gap-2">
+                        <span class="material-symbols-outlined">dashboard</span>
+                        Ver Estado en Mi Cuenta
+                    </a>
+                    <button type="button" class="btn bg-k-highlight hover-bg-card text-white rounded-pill fw-semibold py-2.5 d-flex align-items-center justify-content-center gap-2 border border-k">
+                        <span class="material-symbols-outlined fs-5">description</span>
+                        Descargar Recibo y Factura Fiscal (PDF)
+                    </button>
+                    <a href="#" class="btn btn-link text-k-muted text-decoration-none text-center badge-caps py-2 hover-text-white">
+                        Continuar Explorando el Catálogo →
+                    </a>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- FEATURES STRIP INFERIOR -->
+        <div class="mt-5 bg-k-card rounded-4 p-4 border border-k">
+            <div class="row g-4 align-items-center">
+                <div class="col-6 col-md-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="material-symbols-outlined text-white fs-3">tune</span>
+                        <div>
+                            <span class="badge-caps text-k-muted d-block">FRECUENCIA DE MUESTREO</span>
+                            <span class="small font-monospace text-white fw-semibold">192 kHz / 32-bit Certificado</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="material-symbols-outlined text-white fs-3">security</span>
+                        <div>
+                            <span class="badge-caps text-k-muted d-block">GARANTÍA EXTENDIDA</span>
+                            <span class="small font-monospace text-white fw-semibold">24 Meses Cobertura Total</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="material-symbols-outlined text-white fs-3">inventory_2</span>
+                        <div>
+                            <span class="badge-caps text-k-muted d-block">CUSTODIA FÍSICA</span>
+                            <span class="small font-monospace text-white fw-semibold">Sello Criptográfico Inviolable</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="material-symbols-outlined text-white fs-3">mail</span>
+                        <div>
+                            <span class="badge-caps text-k-muted d-block">ACTUALIZACIONES SMS / EMAIL</span>
+                            <span class="small font-monospace text-white fw-semibold">Activadas en Tiempo Real</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>

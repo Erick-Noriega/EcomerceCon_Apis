@@ -1,0 +1,57 @@
+﻿@model List<OfertaDto>
+
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                Id
+            </th>
+
+            <th>
+                oferta
+            <th>
+                porcentaje de descuento
+
+            </th>
+            <th>
+                Fecha Inicio
+            </th>
+            <th>
+                Fecha fin
+
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model)
+{
+            <tr>
+
+                <td>
+                    @Html.DisplayFor(model => item.Id)
+                </td>
+                <td>
+                    @Html.DisplayFor(model => item.MotivoDeOferta)
+                </td>
+                <td>
+                    @Html.DisplayFor(model => item.PorcentajeADescontar)
+                </td>
+                <td>
+                    @Html.DisplayFor(model => item.Fecha_inicio)
+                </td>
+                <td>
+                    @Html.DisplayFor(model => item.Fecha_fin)
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                    <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                    <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                </td>
+            </tr>
+    }
+</tbody>
+</table>

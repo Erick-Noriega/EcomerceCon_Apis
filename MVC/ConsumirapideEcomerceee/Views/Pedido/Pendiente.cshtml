@@ -1,0 +1,64 @@
+﻿@{
+    ViewData["Title"] = "Pago Pendiente";
+    // Extraemos las variables que adjunta Mercado Pago en la query string
+    var paymentId = Context.Request.Query["payment_id"].ToString();
+    var externalReference = Context.Request.Query["external_reference"].ToString();
+    var paymentType = Context.Request.Query["payment_type"].ToString();
+}
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg border-0 rounded-4 text-center">
+                <div class="card-body p-5">
+
+                    <!-- Icono de Pendiente/Reloj -->
+                    <div class="mb-4 text-warning">
+                        <i class="bi bi-clock-history display-1"></i>
+                    </div>
+
+                    <h2 class="fw-bold mb-2">¡Tu pago está en proceso!</h2>
+                    <p class="text-muted mb-4">
+                        Estamos aguardando la confirmación de la acreditación de tu pago para comenzar a preparar tu pedido.
+                    </p>
+
+                    <!-- Detalles Rápidos del Comprobante -->
+                    <div class="bg-light p-3 rounded-3 text-start mb-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-secondary">N° de Pedido:</span>
+                            <span class="fw-bold">#(String.IsNullOrEmpty(externalReference) ? "N/A" : externalReference)</span>
+                        </div>
+                        @if (!string.IsNullOrEmpty(paymentId))
+                        {
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-secondary">N° Transacción MP:</span>
+                                <span class="fw-bold">@paymentId</span>
+                            </div>
+                        }
+                        <div class="d-flex justify-content-between">
+                            <span class="text-secondary">Estado:</span>
+                            <span class="badge bg-warning text-dark align-self-center">Pendiente de acreditación</span>
+                        </div>
+                    </div>
+
+                    <!-- Mensaje Informativo -->
+                    <div class="alert alert-warning border-0 rounded-3 small mb-4" role="alert">
+                        <i class="bi bi-exclamation-triangle me-1"></i>
+                        Si pagaste en efectivo o mediante transferencia, ten en cuenta que la acreditación puede demorar de unas horas hasta 2 días hábiles. Te avisaremos cuando se confirme.
+                    </div>
+
+                    <!-- Botones de Acción -->
+                    <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                        <a href="@Url.Action("MisPedidos", "Pedido")" class="btn btn-warning btn-lg px-4 gap-3 rounded-pill text-dark fw-semibold">
+                            <i class="bi bi-bag-check me-2"></i>Ver Estado de Mis Pedidos
+                        </a>
+                        <a href="@Url.Action("Index", "Home")" class="btn btn-outline-secondary btn-lg px-4 rounded-pill">
+                            Volver al Inicio
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

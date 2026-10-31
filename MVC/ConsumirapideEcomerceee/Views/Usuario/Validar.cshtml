@@ -1,0 +1,98 @@
+﻿@model Credenciales
+@{
+    ViewData["Title"] = "Acceder a la cuenta";
+}
+
+<div class="container my-auto py-3">
+    <div class="row align-items-center justify-content-center g-4">
+
+        <!-- Columna Izquierda: Información de la Empresa -->
+        <div class="col-lg-6 text-white pe-lg-5">
+            <div class="mb-3">
+                <span class="badge bg-primary px-3 py-2 rounded-pill text-uppercase mb-2">E-Commerce Oficial</span>
+                <h1 class="display-4 fw-bold lh-1 mb-2">Consumirapide</h1>
+                <p class="text-secondary lead fs-6 mb-0">
+                    Tu plataforma integral de compras rápidas, seguras y al mejor precio del mercado.
+                </p>
+            </div>
+
+            <hr class="border-secondary my-3" />
+
+            <!-- Características -->
+            <div class="row g-3">
+                <div class="col-sm-6">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-primary bg-opacity-25 p-2 rounded-circle me-3 text-primary">
+                            <i class="bi bi-truck fs-5"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-0 fs-6">Envíos Rápidos</h6>
+                            <small class="text-secondary style-small">Despacho garantizado 24h</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-sm-6">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-primary bg-opacity-25 p-2 rounded-circle me-3 text-primary">
+                            <i class="bi bi-shield-check fs-5"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-0 fs-6">Pago Seguro</h6>
+                            <small class="text-secondary style-small">Transacciones 100% cifradas</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna Derecha: Tarjeta de Iniciar Sesión -->
+        <div class="col-lg-5 col-xl-4">
+            <div class="card bg-dark text-white border-secondary shadow-lg p-3 p-md-4" style="border-radius: 18px; background-color: #1e1e1e !important;">
+
+                <!-- Pestañas -->
+                <div class="d-flex bg-secondary bg-opacity-25 rounded-pill p-1 mb-3">
+                    <button type="button" class="btn btn-light rounded-pill flex-fill fw-bold py-1 btn-sm">Iniciar Sesión</button>
+                    <a asp-action="Registrar" class="btn text-white-50 flex-fill py-1 btn-sm text-decoration-none text-center">Crear Cuenta</a>
+                </div>
+
+                <!-- Título -->
+                <div class="text-center mb-3">
+                    <h4 class="fw-bold mb-1">Acceder a la cuenta</h4>
+                </div>
+
+                <!-- Formulario -->
+                <form asp-action="Validar" asp-controller="Usuario" method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small mb-3" role="alert"></div> va al final o comienzo
+                    <!-- Email -->
+                    <div class="mb-3">
+                        <label for="email" class="form-label text-secondary small fw-bold mb-1" style="font-size: 0.75rem;">CORREO ELECTRÓNICO</label>
+                        <input type="email" id="Correo" name="Correo" class="form-control bg-light text-dark border-0" required />
+                    </div>
+
+                    <!-- Clave -->
+                    <div class="mb-3">
+                        <label for="clave" class="form-label text-secondary small fw-bold mb-1" style="font-size: 0.75rem;">CONTRASEÑA</label>
+                        <input type="password" id="clave" name="Clave" class="form-control bg-light text-dark border-0"  required />
+                    </div>
+
+                    <!-- Recordar -->
+                    <div class="form-check mb-3 ms-1">
+                        <input class="form-check-input bg-dark border-secondary" type="checkbox" id="recordar" name="Recordar">
+                        <label class="form-check-label small text-secondary ms-1" for="recordar">
+                            Recordar mi sesión
+                        </label>
+                    </div>
+
+                    <!-- Botón -->
+                    <button type="submit" class="btn btn-light w-100 rounded-pill fw-bold py-2 text-dark">
+                        Ingresar →
+                    </button>
+                </form>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+

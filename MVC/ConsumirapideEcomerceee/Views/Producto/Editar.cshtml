@@ -1,0 +1,100 @@
+﻿@model EditarProductoDto
+
+<div class="container my-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card bg-dark border-secondary shadow-lg rounded-4 overflow-hidden text-white">
+
+                <!-- Encabezado de la Tarjeta -->
+                <div class="card-header bg-black border-bottom border-secondary py-3 px-4">
+                    <h4 class="mb-0 fw-bold text-white">
+                        <i class="bi bi-pencil-square text-warning me-2"></i>Editar Producto
+                    </h4>
+                    <p class="text-secondary small mb-0 mt-1">Modifica los datos necesarios y guarda los cambios.</p>
+                </div>
+
+                <!-- Cuerpo del Formulario -->
+                <div class="card-body p-4">
+                    <form asp-action="Edit">
+                        <!-- Resumen de validación -->
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small mb-3" role="alert"></div>
+
+                        <!-- ID Oculto para que viaje en el POST -->
+                        <input type="hidden" asp-for="Id" />
+
+                        <!-- ID Visual (Deshabilitado) -->
+                        <div class="mb-3">
+                            <label asp-for="Id" class="form-label text-secondary small fw-bold mb-1" style="font-size: 0.75rem;"></label>
+                            <input asp-for="Id" class="form-control bg-secondary bg-opacity-25 text-white-50 border-secondary" disabled />
+                            <span asp-validation-for="Id" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Nombre -->
+                        <div class="mb-3">
+                            <label asp-for="Nombre" class="form-label text-secondary small fw-bold mb-1" style="font-size: 0.75rem;"></label>
+                            <input asp-for="Nombre" class="form-control bg-secondary bg-opacity-10 text-white border-secondary" required />
+                            <span asp-validation-for="Nombre" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Descripción -->
+                        <div class="mb-3">
+                            <label asp-for="Descripcion" class="form-label text-secondary small fw-bold mb-1" style="font-size: 0.75rem;"></label>
+                            <textarea asp-for="Descripcion" class="form-control bg-secondary bg-opacity-10 text-white border-secondary" rows="3"></textarea>
+                            <span asp-validation-for="Descripcion" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Precio -->
+                        <div class="mb-3">
+                            <label asp-for="precio" class="form-label text-secondary small fw-bold mb-1" style="font-size: 0.75rem;"></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-dark border-secondary text-secondary">$</span>
+                                <input asp-for="precio" class="form-control bg-secondary bg-opacity-10 text-white border-secondary" required />
+                            </div>
+                            <span asp-validation-for="precio" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Cantidad -->
+                        <div class="mb-3">
+                            <label asp-for="cantidad" class="form-label text-secondary small fw-bold mb-1" style="font-size: 0.75rem;"></label>
+                            <input asp-for="cantidad" class="form-control bg-secondary bg-opacity-10 text-white border-secondary" required />
+                            <span asp-validation-for="cantidad" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Categoría Id (Select) -->
+                        <div class="mb-3">
+                            <label asp-for="CategoriaId" class="form-label text-secondary small fw-bold mb-1" style="font-size: 0.75rem;"></label>
+                            <select asp-for="CategoriaId" asp-items="ViewBag.Categorias" class="form-select bg-secondary bg-opacity-10 text-white border-secondary">
+                                <option value="">-- Seleccione una categoría --</option>
+                            </select>
+                            <span asp-validation-for="CategoriaId" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Imagen URL -->
+                        <div class="mb-4">
+                            <label asp-for="ImagenUrl" class="form-label text-secondary small fw-bold mb-1" style="font-size: 0.75rem;"></label>
+                            <input asp-for="ImagenUrl" class="form-control bg-secondary bg-opacity-10 text-white border-secondary" />
+                            <span asp-validation-for="ImagenUrl" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Botones de Acción -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-warning fw-bold py-2 shadow-sm text-dark">
+                                <i class="bi bi-save me-1"></i> Guardar Cambios
+                            </button>
+                            <a asp-action="Index" class="btn btn-outline-secondary text-white-50 border-secondary py-2">
+                                <i class="bi bi-arrow-left me-1"></i> Volver al Listado
+                            </a>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

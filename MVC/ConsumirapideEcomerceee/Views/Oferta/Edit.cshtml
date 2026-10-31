@@ -1,0 +1,48 @@
+﻿@model OfertaDto
+
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            <label asp-for="Id" class="control-label"></label>
+            <input asp-for="Id" class="form-control" disabled />
+            <span asp-validation-for="Id" class="text-danger"></span>
+            <div class="form-group">
+                <label asp-for="MotivoDeOferta" class="control-label"></label>
+                <input asp-for="MotivoDeOferta" class="form-control" />
+                <span asp-validation-for="MotivoDeOferta" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="PorcentajeADescontar" class="control-label"></label>
+                <input asp-for="PorcentajeADescontar" class="form-control" />
+                <span asp-validation-for="PorcentajeADescontar" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Fecha_inicio" class="control-label"></label>
+                <input asp-for="Fecha_inicio" type="datetime-local" class="form-control" />
+                <span asp-validation-for="Fecha_inicio" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Fecha_fin" class="control-label"></label>
+                <input asp-for="Fecha_fin" type="datetime-local" class="form-control" />
+                <span asp-validation-for="Fecha_fin" class="text-danger"></span>
+            </div>
+            <div class="form-check form-switch">
+                @Html.CheckBoxFor(model => model.disponible, new { @class = "form-check-input", @role = "switch", id = "switchEstado" })
+                <label class="form-check-label" for="switchEstado">
+                    @(Model.disponible ? "Activo" : "Inactivo")
+                </label>
+            </div>
+
+
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>

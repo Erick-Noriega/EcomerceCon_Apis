@@ -1,0 +1,346 @@
+﻿@model List<DetalleCarritoDto>
+
+<div class="container my-5">
+    <h2 class="mb-4 fw-bold">🛒 Tu Carrito de Compras</h2>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info text-center">
+            Tu carrito está vacío. <a href="/Usuario/Mostrador" class="alert-link">Ver productos</a>
+        </div>
+    }
+    else
+    {
+        <!-- PASO 1: VISTA DEL CARRITO Y PRODUCTOS -->
+        <div id="seccion-carrito" class="row g-4">
+            <!-- COLUMNA IZQUIERDA: Productos -->
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-body p-4">
+
+                        @foreach (var item in Model)
+                        {
+                            <div class="row align-items-center py-3 border-bottom">
+                                <!-- Imagen -->
+                                <div class="col-md-2 col-4">
+                                    <img src="@item.ImagenUrl" class="img-fluid rounded" alt="@item.NombreProducto" style="max-height: 80px; object-fit: cover;">
+                                </div>
+
+                                <!-- Nombre y Precio Unitario -->
+                                <div class="col-md-4 col-8">
+                                    <h5 class="mb-1 fs-6 fw-bold">@item.NombreProducto</h5>
+                                    <span class="text-muted small">$@item.PrecioUnitario.ToString("N2") c/u</span>
+                                </div>
+
+                                <!-- Contenedor de Cantidad -->
+                                <div class="col-md-3 col-6 my-2 my-md-0">
+                                    <div class="input-group input-group-sm w-75">
+                                        <button class="btn btn-outline-secondary" type="button" onclick="cambiarCantidad(@item.ProductoId, -1, @item.Cantidad)">-</button>
+                                        <input type="text" class="form-control text-center" value="@item.Cantidad" readonly>
+                                        <button class="btn btn-outline-secondary" type="button" onclick="cambiarCantidad(@item.ProductoId, 1, @item.Cantidad)">+</button>
+                                    </div>
+                                </div>
+
+                                <!-- Subtotal del producto -->
+                                <div class="col-md-2 col-4 text-end">
+                                    <span class="fw-bold fs-6">$@((item.PrecioUnitario * item.Cantidad).ToString("N2"))</span>
+                                </div>
+
+                                <!-- Botón Eliminar -->
+                                <div class="col-md-1 col-2 text-end">
+                                    <button class="btn btn-link text-danger p-0" title="Eliminar" onclick="eliminarProducto(@item.ProductoId)">🗑️</button>
+                                </div>
+                            </div>
+                        }
+
+                        <div class="mt-4">
+                            <a href="/Usuario/Mostrador" class="btn btn-outline-primary btn-sm">← Continuar Comprando</a>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLUMNA DERECHA: Resumen de Compra -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm position-sticky" style="top: 20px;">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-3">Resumen del Pedido</h5>
+
+                        @{
+                            var total = Model.Sum(x => x.PrecioUnitario * x.Cantidad);
+                        }
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Subtotal</span>
+                            <span class="fw-semibold">$@total.ToString("N2")</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Envío</span>
+                            <span class="text-success fw-semibold">Gratis</span>
+                        </div>
+
+                        <hr class="my-3">
+
+                        <div class="d-flex justify-content-between mb-4">
+                            <span class="fs-5 fw-bold">Total</span>
+                            <span class="fs-4 fw-bold text-primary">$@total.ToString("N2")</span>
+                        </div>
+
+                        <!-- Botón para avanzar al Paso 2 -->
+                        <button type="button" class="btn btn-success btn-lg w-100" onclick="irAEnvio()">
+                            Continuar a Datos de Envío 🚚
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PASO 2: FORMULARIO DE DIRECCIÓN DE ENVÍO -->
+        <div id="seccion-envio" class="row justify-content-center d-none">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h4 class="fw-bold mb-1 text-primary">🚚 Datos de Envío</h4>
+                        <p class="text-muted small mb-4">Ingresa tu domicilio completo en Argentina para verificar la cobertura.</p>
+
+                        <form id="formDireccion" class="row g-3" onsubmit="return false;">
+                            <!-- Provincia -->
+                            <div class="col-md-6">
+                                <label for="provinciaInput" class="form-label fw-bold">Provincia</label>
+                                <select id="provinciaInput" class="form-select" required>
+                                    <option value="">Selecciona tu provincia...</option>
+                                    <option value="Buenos Aires">Buenos Aires</option>
+                                    <option value="Catamarca">Catamarca</option>
+                                    <option value="Chaco">Chaco</option>
+                                    <option value="Chubut">Chubut</option>
+                                    <option value="Ciudad Autónoma de Buenos Aires">Ciudad Autónoma de Buenos Aires</option>
+                                    <option value="Córdoba">Córdoba</option>
+                                    <option value="Corrientes">Corrientes</option>
+                                    <option value="Entre Ríos">Entre Ríos</option>
+                                    <option value="Formosa">Formosa</option>
+                                    <option value="Jujuy">Jujuy</option>
+                                    <option value="La Pampa">La Pampa</option>
+                                    <option value="La Rioja">La Rioja</option>
+                                    <option value="Mendoza">Mendoza</option>
+                                    <option value="Misiones">Misiones</option>
+                                    <option value="Neuquén">Neuquén</option>
+                                    <option value="Río Negro">Río Negro</option>
+                                    <option value="Salta">Salta</option>
+                                    <option value="San Juan">San Juan</option>
+                                    <option value="San Luis">San Luis</option>
+                                    <option value="Santa Cruz">Santa Cruz</option>
+                                    <option value="Santa Fe">Santa Fe</option>
+                                    <option value="Santiago del Estero">Santiago del Estero</option>
+                                    <option value="Tierra del Fuego">Tierra del Fuego</option>
+                                    <option value="Tucumán">Tucumán</option>
+                                </select>
+                            </div>
+
+                            <!-- Localidad / Ciudad -->
+                            <div class="col-md-6">
+                                <label for="localidadInput" class="form-label fw-bold">Localidad / Ciudad</label>
+                                <input type="text" id="localidadInput" class="form-control" placeholder="Ej: Córdoba Centro / San Justo" required>
+                            </div>
+
+                            <!-- Calle y Número -->
+                            <div class="col-md-8">
+                                <label for="calleInput" class="form-label fw-bold">Calle y Número</label>
+                                <input type="text" id="calleInput" class="form-control" placeholder="Ej: Av. Colón 1234" required>
+                            </div>
+
+                            <!-- Piso / Departamento (Opcional) -->
+                            <div class="col-md-4">
+                                <label for="dptoInput" class="form-label fw-bold">Piso / Dpto <span class="text-muted fw-normal">(Opcional)</span></label>
+                                <input type="text" id="dptoInput" class="form-control" placeholder="Ej: 2B">
+                            </div>
+                        </form>
+
+                        <div class="p-3 bg-light rounded my-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold">Total a pagar:</span>
+                                <span class="fs-5 fw-bold text-primary">$@total.ToString("N2")</span>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center pt-2">
+                            <button type="button" class="btn btn-outline-secondary" onclick="volverACarrito()">
+                                ← Volver al Carrito
+                            </button>
+                            <button type="button" id="btnConfirmar" class="btn btn-success btn-lg" onclick="validarYVerificarEnvio()">
+                                Confirmar y Pagar 💳
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<script>
+    // --- LÓGICA DE CANTIDAD ---
+    async function cambiarCantidad(productoId, cambio, cantidadActual) {
+        const nuevaCantidad = cantidadActual + cambio;
+
+        if (nuevaCantidad < 0) {
+            eliminarProducto(productoId);
+            return;
+        }
+
+        try {
+            const respuesta = await fetch('/DetaleCarrito/Create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productoId: productoId, cantidad: cambio })
+            });
+
+            if (respuesta.ok) {
+                window.location.reload();
+            } else {
+                alert("No se pudo actualizar la cantidad.");
+            }
+        } catch (error) {
+            console.error("Error al actualizar cantidad:", error);
+        }
+    }
+
+  //  // --- LÓGICA DE ELIMINAR PRODUCTO ---
+  //  async function eliminarProducto(productoId,cambio) {
+  //      if (!confirm("¿Deseas eliminar este producto del carrito?")) return;
+  //
+  //      try {
+  //          const respuesta = await fetch('/DetaleCarrito/Create', {
+  //              method: 'POST',
+  //              headers: { 'Content-Type': 'application/json' },
+  //              body: JSON.stringify({ productoId: productoId,cantidad: cambio })
+  //          });
+  //
+  //          if (respuesta.ok) {
+  //              window.location.reload();
+  //          } else {
+  //              alert("No se pudo eliminar el producto.");
+  //          }
+  //      } catch (error) {
+  //          console.error("Error al eliminar producto:", error);
+  //      }
+  //  }
+
+    // --- LÓGICA DE TRANSICIÓN DE VISTAS ---
+    function irAEnvio() {
+        document.getElementById("seccion-carrito").classList.add("d-none");
+        document.getElementById("seccion-envio").classList.remove("d-none");
+    }
+
+    function volverACarrito() {
+        document.getElementById("seccion-envio").classList.add("d-none");
+        document.getElementById("seccion-carrito").classList.remove("d-none");
+    }
+
+    // --- VALIDACIÓN DE COBERTURA Y ENVÍO AL CONTROLLER DE MVC ---
+    async function validarYVerificarEnvio() {
+        const btnConfirmar = document.getElementById("btnConfirmar");
+
+        const provincia = document.getElementById("provinciaInput").value;
+        const localidad = document.getElementById("localidadInput").value.trim();
+        const calle = document.getElementById("calleInput").value.trim();
+        const piso_depto = document.getElementById("dptoInput").value.trim();
+
+        if (!provincia || !localidad || !calle) {
+            alert("Por favor completa los campos obligatorios: Provincia, Localidad y Calle.");
+            return;
+        }
+
+        btnConfirmar.disabled = true;
+        btnConfirmar.innerText = "Procesando...";
+
+        const direccionBusqueda = `${calle}, ${localidad}, ${provincia}, Argentina`;
+        const urlOsm = `https://nominatim.openstreetmap.org/search?format=json&countrycodes=ar&q=${encodeURIComponent(direccionBusqueda)}`;
+
+        try {
+            // 1. VALIDACIÓN GEOGRÁFICA CON OPENSTREETMAP
+            const resOsm = await fetch(urlOsm, { headers: { 'User-Agent': 'MiEcommerceApp/1.0' } });
+            const datosOsm = await resOsm.json();
+
+            if (!datosOsm || datosOsm.length === 0) {
+                alert("No pudimos validar la dirección dentro de Argentina. Verifica que la calle y localidad estén bien escritas.");
+                btnConfirmar.disabled = false;
+                btnConfirmar.innerText = "Confirmar y Pagar 💳";
+                return;
+            }
+
+            const latCliente = parseFloat(datosOsm[0].lat);
+            const lonCliente = parseFloat(datosOsm[0].lon);
+
+            // Coordenadas del local (Córdoba Centro)
+            const latLocal = -31.4167;
+            const lonLocal = -64.1833;
+
+            const distanciaKm = calcularDistanciaKm(latLocal, lonLocal, latCliente, lonCliente);
+            const radioMaximoKm = 20;
+
+            if (distanciaKm > radioMaximoKm) {
+                alert(`La dirección ingresada está a ${distanciaKm.toFixed(1)} km. Excede nuestro límite de cobertura (${radioMaximoKm} km).`);
+                btnConfirmar.disabled = false;
+                btnConfirmar.innerText = "Confirmar y Pagar 💳";
+                return;
+            }
+
+            // 2. ARMAR STRING DE DIRECCIÓN COMPLETA
+            let direccionFinal = `${calle}`;
+            if (piso_depto) direccionFinal += ` Dpto/Piso: ${piso_depto}`;
+            direccionFinal += `, ${localidad}, ${provincia}`;
+
+            // 3. ENVIAR AL CONTROLLER DE MVC (por ejemplo: /Pedido/Confirmar)
+                // 3. ENVIAR AL CONTROLLER DE MVC CON LA ESTRUCTURA DEL DTO
+    const respuestaMvc = await fetch('/Pedido/ConfirmarPedido', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            provincia: provincia,
+            Localidad: localidad,
+            calle: calle,
+            piso_depto: piso_depto
+        })
+    });
+
+            if (respuestaMvc.ok) {
+                const data = await respuestaMvc.json();
+
+                // 4. REDIRIGIR A LA URL DE MERCADO PAGO DEVUELTA POR EL CONTROLLER
+                if (data.initPoint) {
+                    window.location.href = data.initPoint;
+                } else {
+                    alert("Ocurrió un problema al obtener el link de pago.");
+                    btnConfirmar.disabled = false;
+                    btnConfirmar.innerText = "Confirmar y Pagar 💳";
+                }
+            } else {
+                const errorText = await respuestaMvc.text();
+                alert("Error procesando la orden: " + errorText);
+                btnConfirmar.disabled = false;
+                btnConfirmar.innerText = "Confirmar y Pagar 💳";
+            }
+
+        } catch (error) {
+            console.error("Error general:", error);
+            alert("Ocurrió un error al procesar el envío. Intenta nuevamente.");
+            btnConfirmar.disabled = false;
+            btnConfirmar.innerText = "Confirmar y Pagar 💳";
+        }
+    }
+
+    // Función Haversine para cálculo de distancia en KM
+    function calcularDistanciaKm(lat1, lon1, lat2, lon2) {
+        const R = 6371;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+    }
+</script>

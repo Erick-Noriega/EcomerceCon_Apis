@@ -1,0 +1,84 @@
+﻿@model CrearUsuarioDto
+
+<div class="container my-5">
+    <div class="row justify-content-center align-items-stretch g-4">
+
+        <!-- Panel Izquierdo: Presentación de la Tienda / E-commerce -->
+        <div class="col-lg-6 d-flex">
+            <div class="bg-dark text-white p-4 p-md-5 rounded-4 w-100 d-flex flex-column justify-content-between border border-secondary border-opacity-25 shadow">
+                <div>
+                    <span class="badge bg-secondary mb-3">TIENDA ONLINE</span>
+                    <h2 class="fw-bold mb-3">Únete a nuestra comunidad</h2>
+                    <p class="text-secondary">
+                        Crea tu cuenta para realizar compras más rápido, dar seguimiento a tus pedidos y acceder a ofertas exclusivas.
+                    </p>
+                </div>
+
+                <div class="row g-3 my-3">
+                    <div class="col-6">
+                        <div class="p-3 bg-body-tertiary bg-opacity-10 rounded-3 border border-secondary border-opacity-25">
+                            <h6 class="fw-bold mb-1">Envíos Rápidos</h6>
+                            <small class="text-secondary">Seguimiento en tiempo real de tus compras.</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 bg-body-tertiary bg-opacity-10 rounded-3 border border-secondary border-opacity-25">
+                            <h6 class="fw-bold mb-1">Pagos Seguros</h6>
+                            <small class="text-secondary">Múltiples métodos de pago integrados.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-secondary small">
+                    <hr class="border-secondary opacity-25">
+                    <span>Protección de datos y compras 100% garantizadas.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel Derecho: Formulario de Registro de Usuario -->
+        <div class="col-lg-5">
+            <div class="bg-dark text-white p-4 p-md-5 rounded-4 border border-secondary border-opacity-25 shadow">
+
+                <h3 class="fw-bold mb-1">Registrarse</h3>
+                <p class="text-secondary small mb-4">Ingresa tus datos para completar la creación de tu cuenta.</p>
+
+                <form asp-action="Registrar" asp-controller="Usuario" method="post">
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label for="Nombre" class="form-label small text-secondary fw-semibold">NOMBRE</label>
+                            <input type="text" id="Nombre" name="Nombre" class="form-control bg-black text-white border-secondary" placeholder="Ej. Juan" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label for="Apellido" class="form-label small text-secondary fw-semibold">APELLIDO</label>
+                            <input type="text" id="Apellido" name="Apellido" class="form-control bg-black text-white border-secondary" placeholder="Ej. Pérez" required />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="Fecha_nac" class="form-label small text-secondary fw-semibold">FECHA DE NACIMIENTO</label>
+                        <input type="date" id="Fecha_nac" name="Fecha_nac" class="form-control bg-black text-white border-secondary" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="Correo" class="form-label small text-secondary fw-semibold">CORREO ELECTRÓNICO</label>
+                        <input type="email" id="Correo" name="Correo" class="form-control bg-black text-white border-secondary" placeholder="correo@ejemplo.com" required />
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="Password" class="form-label small text-secondary fw-semibold">CONTRASEÑA</label>
+                        <input type="password" id="Password" name="Password" class="form-control bg-black text-white border-secondary" placeholder="••••••••" required />
+                    </div>
+
+                    <button type="submit" class="btn btn-light w-100 fw-bold py-2">
+                        Registrarse
+                    </button>
+
+                </form>
+
+            </div>
+        </div>
+
+    </div>
+</div>

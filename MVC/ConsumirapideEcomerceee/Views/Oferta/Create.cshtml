@@ -1,0 +1,218 @@
+﻿
+<h2>Crear Nueva Oferta</h2>
+
+<!-- ============================================================== -->
+<!-- PASO 1: FORMULARIO DE DATOS DE LA OFERTA                       -->
+<!-- ============================================================== -->
+<div id="paso-oferta" class="card p-4 shadow-sm mb-4">
+    <h4 class="card-title mb-3">Paso 1: Información de la Oferta</h4>
+
+    <div class="form-group mb-3">
+        <label for="txtMotivo" class="form-label">Motivo de la Oferta</label>
+        <input type="text" id="txtMotivo" class="form-control" placeholder="Ej: Liquidación de Fin de Año" required />
+    </div>
+
+    <div class="form-group mb-3">
+        <label for="txtMonto" class="form-label">Monto a Descontar ($)</label>
+        <input type="number" step="0.01" id="txtMonto" class="form-control" placeholder="0.00" required />
+    </div>
+
+    <div class="form-group mb-3">
+        <label for="txtFechaInicio" class="form-label">Fecha de Inicio</label>
+        <input type="datetime-local" id="txtFechaInicio" class="form-control" required />
+    </div>
+
+    <div class="form-group mb-3">
+        <label for="txtFechaFin" class="form-label">Fecha de Fin</label>
+        <input type="datetime-local" id="txtFechaFin" class="form-control" required />
+    </div>
+
+    <button type="button" id="btnContinuarAProductos" class="btn btn-primary mt-2">
+        Continuar a Seleccionar Productos &raquo;
+    </button>
+</div>
+
+
+<!-- ============================================================== -->
+<!-- PASO 2: DUAL LISTBOX DE PRODUCTOS (EMPIEZA OCULTO)            -->
+<!-- ============================================================== -->
+<div id="paso-productos" class="card p-4 shadow-sm mb-4" style="display: none;">
+    <h4 class="card-title mb-3">Paso 2: Asociar Productos a la Oferta</h4>
+
+    <div class="row align-items-center">
+        <!-- Lista de Productos Disponibles -->
+        <div class="col-md-5">
+            <label class="form-label font-weight-bold">Productos Disponibles</label>
+            <select id="origen" multiple class="form-control" size="10"></select>
+        </div>
+
+        <!-- Botones de Acción (De a 1 producto) -->
+        <div class="col-md-2 text-center d-flex flex-md-column justify-content-center my-3 my-md-0">
+            <button type="button" id="btn-mover-derecha" class="btn btn-outline-primary mb-md-2 me-2 me-md-0" title="Agregar seleccionado">
+                &gt;
+            </button>
+            <button type="button" id="btn-mover-izquierda" class="btn btn-outline-primary" title="Quitar seleccionado">
+                &lt;
+            </button>
+        </div>
+
+        <!-- Lista de Productos Elegidos para la Oferta -->
+        <div class="col-md-5">
+            <label class="form-label font-weight-bold">Productos en esta Oferta</label>
+            <select id="destino" multiple class="form-control" size="10"></select>
+        </div>
+    </div>
+
+    <div class="mt-4 d-flex justify-content-between">
+        <button type="button" id="btnVolverAOferta" class="btn btn-secondary">
+            &laquo; Volver a la Oferta
+        </button>
+        <button type="button" id="btnGuardarFinal" class="btn btn-success">
+            Guardar Oferta Completa
+        </button>
+    </div>
+</div>
+
+
+<!-- ============================================================== -->
+<!-- JAVASCRIPT UNIFICADO Y CORREGIDO                               -->
+<!-- ============================================================== -->
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // -------------------------------------------------------------
+            // 1. CARGAR PRODUCTOS DESDE LA API (PUERTO 5093)
+            // -------------------------------------------------------------
+            fetch('http://localhost:5093/api/Producto/ListarParaOferta')
+                .then(res => {
+                    if (!res.ok) throw new Error("Error en la respuesta de la API");
+                    return res.json();
+                })
+                .then(productos => {
+                    const origen = document.getElementById('origen');
+                    origen.innerHTML = ''; // Limpiar select
+
+                    productos.forEach(p => {
+                        const opt = document.createElement('option');
+                        // Ajusta 'p.id' o 'p.nombre' si la API los devuelve con otro nombre
+                        opt.value = p.id || p.idProducto;
+                        opt.textContent = p.nombre || p.nombreProducto;
+                        origen.appendChild(opt);
+                    });
+                })
+                .catch(err => console.error("Error al obtener lista de productos:", err));
+
+
+            // -------------------------------------------------------------
+            // 2. LÓGICA DUAL LISTBOX (MOVER DE A 1 DE FORMA SEGURA)
+            // -------------------------------------------------------------
+
+            // Mover a la Derecha (Agregar a oferta)
+            document.getElementById('btn-mover-derecha').addEventListener('click', () => {
+                const origen = document.getElementById('origen');
+                const destino = document.getElementById('destino');
+
+                if (origen.selectedIndex === -1 || origen.selectedOptions.length > 1) {
+                    origen.selectedIndex = -1;
+                    return;
+                }
+
+                const opcion = origen.options[origen.selectedIndex];
+                destino.appendChild(opcion);
+
+                origen.selectedIndex = -1;
+                destino.selectedIndex = -1;
+            });
+
+            // Mover a la Izquierda (Quitar de oferta)
+            document.getElementById('btn-mover-izquierda').addEventListener('click', () => {
+                const origen = document.getElementById('origen');
+                const destino = document.getElementById('destino');
+
+                if (destino.selectedIndex === -1 || destino.selectedOptions.length > 1) {
+                    destino.selectedIndex = -1;
+                    return;
+                }
+
+                const opcion = destino.options[destino.selectedIndex];
+                origen.appendChild(opcion);
+
+                origen.selectedIndex = -1;
+                destino.selectedIndex = -1;
+            });
+
+
+            // -------------------------------------------------------------
+            // 3. NAVEGACIÓN ENTRE PASOS (VALIDACIÓN Y TRANSICIÓN)
+            // -------------------------------------------------------------
+
+            // Ir al Paso 2 (Productos)
+            document.getElementById('btnContinuarAProductos').addEventListener('click', () => {
+                const motivo = document.getElementById('txtMotivo').value.trim();
+                const monto = document.getElementById('txtMonto').value.trim();
+                const inicio = document.getElementById('txtFechaInicio').value;
+                const fin = document.getElementById('txtFechaFin').value;
+
+                if (!motivo || !monto || !inicio || !fin) {
+                    alert("Por favor completa todos los campos del formulario de la oferta.");
+                    return;
+                }
+
+                document.getElementById('paso-oferta').style.display = 'none';
+                document.getElementById('paso-productos').style.display = 'block';
+            });
+
+            // Volver al Paso 1 (Formulario Oferta)
+            document.getElementById('btnVolverAOferta').addEventListener('click', () => {
+                document.getElementById('paso-productos').style.display = 'none';
+                document.getElementById('paso-oferta').style.display = 'block';
+            });
+
+
+            // -------------------------------------------------------------
+            // 4. GUARDADO FINAL (ENVÍO AL CONTROLLER MVC)
+            // -------------------------------------------------------------
+            document.getElementById('btnGuardarFinal').addEventListener('click', async () => {
+                const destino = document.getElementById('destino');
+                const idsSeleccionados = Array.from(destino.options).map(opt => parseInt(opt.value));
+
+                if (idsSeleccionados.length === 0) {
+                    alert("Debes seleccionar al menos un producto para aplicar la oferta.");
+                    return;
+                }
+
+                // Armar el payload completo
+                const dtoCompleto = {
+                    MotivoDeOferta: document.getElementById('txtMotivo').value,
+                    MontoAdescontar: parseFloat(document.getElementById('txtMonto').value),
+                    Fecha_inicio: document.getElementById('txtFechaInicio').value,
+                    Fecha_fin: document.getElementById('txtFechaFin').value,
+                    ProductoIds: idsSeleccionados // Arreglo de enteros [1, 5, 8...]
+                };
+
+                try {
+                    // Petición POST al Controller dentro de tu proyecto MVC
+                    const response = await fetch('/Oferta/Create', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(dtoCompleto)
+                    });
+
+                    if (response.ok) {
+                        alert("¡Oferta guardada exitosamente!");
+                        window.location.href = '/Oferta/Index';
+                    } else {
+                        alert("Ocurrió un error en el servidor al intentar guardar la oferta.");
+                    }
+                } catch (error) {
+                    console.error("Error al enviar los datos:", error);
+                    alert("Ocurrió un error de red al intentar comunicarse con el servidor MVC.");
+                }
+            });
+
+        });
+    </script>
+}
