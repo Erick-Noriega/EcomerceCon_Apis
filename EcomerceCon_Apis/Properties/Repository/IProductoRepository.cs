@@ -11,6 +11,7 @@ namespace EcomerceCon_Apis.Properties.Repository
         Task AgregarProducto(Producto producto);
         Task<Producto> Obtener(int Id);
         Task Editar(Producto producto);
+    
         Task GuardarCambios();
 
     }

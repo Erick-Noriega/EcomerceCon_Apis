@@ -12,6 +12,15 @@ namespace EcomerceCon_Apis.Properties.Repository
             _context = context;
         }
 
+        public async Task<Pedido> ComprobarPedidoConId(string idpedido)
+        {
+            var pedido = await _context.Pedidos
+       .Include(p => p.detallePedido)
+           .ThenInclude(d => d.producto)
+       .FirstOrDefaultAsync(p => p.Id.ToString() == idpedido);
+            return pedido;
+        }
+
         public async Task ConfirmarPedido(Pedido pedido)
         {
             _context.Add(pedido);
@@ -28,6 +37,10 @@ namespace EcomerceCon_Apis.Properties.Repository
             var pedido=await _context.Pedidos
        .FirstOrDefaultAsync(p => p.UsuarioId == UsuarioId && p.estadoPedido == estadoPedido);
             return pedido;
+
+
         }
+
+      
     }
 }

@@ -24,8 +24,7 @@ namespace EcomerceCon_Apis.Services
         {
 
             var fecha = DateTime.Now;
-            try
-            {
+          
                 var producto = await _repo.ListaDeAdmins();
                 var dto = await _context.Productos.Include(c => c.categoria).Include(o => o.ofertas)
                  .Select(p => new ProductoDtoParaAminds
@@ -48,23 +47,25 @@ namespace EcomerceCon_Apis.Services
      : p.precio
 
                  }).ToListAsync();
-                return dto;
-
-
-            }
-            catch (Exception ex)
+            if (dto != null)
             {
 
-                throw new Exception("Error al obtener la lista de productos: " + ex.Message);
+                return dto;
+            }
+            else
+            {
+                throw new Exception("Error al obtener la lista de productos");
 
             }
+
+
+
+
 
         }
         public async Task<List<ProductoDto>> lista()
         {
-            try
-            {
-
+           
 
                 var aux = await _context.ofertaProductos.Select(p => p.ProductoId).ToListAsync();
                 var fechaoferta = await _context.Ofertas.Where(f => f.Fecha_inicio >= DateTime.Now && f.Fecha_fin <= DateTime.Now).FirstOrDefaultAsync();
@@ -103,36 +104,33 @@ namespace EcomerceCon_Apis.Services
 
                 }
 
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Error al obtener la lista de productos: " + ex.Message);
+            }       
 
-
-
-            }
-
-        }
+        
         public async Task<List<ListarProductosParaoOfertaDto>> ListarParaOFerta()
         {
-            try
-            {
+            
                 var producto = await _context.Productos.Select(o => new ListarProductosParaoOfertaDto
                 {
                     Id = o.Id,
                     Nombre = o.Nombre,
                 }
               ).ToListAsync();
-                return producto;
-            }
-            catch (Exception ex)
+            if (producto != null)
             {
 
-                throw new Exception("Error al listar productos para oferta: " + ex.Message);
+                return producto;
             }
+            else
+            {
+                throw new Exception("Error al obtener la lista de productos");
 
-
+            }
         }
+            
+
+
+        
 
         public async Task Create(CrearProductoDto productoDto)
         {
@@ -162,8 +160,7 @@ namespace EcomerceCon_Apis.Services
 
         public async Task<EditarProductoDto> Obtener(int productoId)
         {
-            try
-            {
+           
                 if (productoId >= 1)
                 {
                     var producto = await _repo.Obtener(productoId);
@@ -181,27 +178,29 @@ namespace EcomerceCon_Apis.Services
                         // Uso del null-conditional por seguridad
                     };
 
+                if (dto != null)
+                {
 
                     return dto;
                 }
                 else
                 {
+                    throw new Exception("Error al obtener el producto");
+
+                }
+            }
+                else
+                {
                     throw new Exception("El Id del producto debe ser mayor a 0.");
                 }
 
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Error al obtener el producto: " + ex.Message);
-            }
+           
 
         }
         public async Task Editar(EditarProductoDto dto)
         {
             var existencia = await _repo.Obtener(dto.Id);
-            try
-            {
-
+            
                 if (existencia != null && dto.Id > 0 && dto.cantidad > 0 && dto.precio > 0)
                 {
 
@@ -215,10 +214,6 @@ namespace EcomerceCon_Apis.Services
                     existencia.precio = dto.precio;
                     await _repo.GuardarCambios();
                 }
-
-
-
-
                 else
                 {
                     throw new Exception("Error al obtener el producto");
@@ -226,18 +221,9 @@ namespace EcomerceCon_Apis.Services
                 }
 
             }
-            catch (Exception ex)
-            {
-
-                throw new Exception("Error al obtener el producto: " + ex.Message);
-
-            }
-        
 
 
         }
 
-
-
     }
-}
+

@@ -35,32 +35,13 @@ namespace EcomerceCon_Apis.Controllers
         {
 
 
-            try
-            {
+            
 
                 var producto = await _producto.ListaDeAdmins();
                
 
                     return Ok(producto);
-                
-               
-                 
-
-                
-            }
-            catch (Exception)
-            {
-
-
-                return BadRequest(new RespuestaGenericaDto<EditarProductoDto>
-                {
-                    IsSuccess = false,
-                    Mensaje = "error,no se econtraron productos"
-
-                });
-            }
-
-
+ 
         }
 
 
@@ -72,51 +53,21 @@ namespace EcomerceCon_Apis.Controllers
         public async Task<IActionResult> listar()
         {
 
-            try
-            {
-
+    
                 var producto = await _producto.lista();
-                if (producto != null)
-                {
+             
                     return Ok(producto);
-                }
-                else
-                {
-                    return Ok(new RespuestaGenericaDto<EditarProductoDto>
-                    {
-                        IsSuccess = false,
-                        Mensaje = "no se encontraron productos"
-                    });
-                }
-
-
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Error al obtener el producto: " + ex.Message);
-
-
-            }
+   
 
         }
         [HttpGet]
         [Route("ListarParaOferta")]
         public async Task<IActionResult> ListaNorma()
         {
-            var producto = await _producto.ListarParaOFerta();
-
-            if (producto != null)
-            {
+            var producto = await _producto.ListarParaOFerta();        
                 return Ok(producto);
-            }
-            else
-            {
-                return BadRequest(new RespuestaGenericaDto<EditarProductoDto>
-                {
-                    IsSuccess = false,
-                    Mensaje = "no se encontraron productos"
-                });
-            }
+         
+            
         }
 
         [HttpPost]
@@ -124,29 +75,16 @@ namespace EcomerceCon_Apis.Controllers
         [ProducesResponseType(typeof(RespuestaGenericaDto<CrearProductoDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> Crear([FromBody] CrearProductoDto productoDto)
         {
-
-            try
-            {
-          
+  
                 await _producto.Create(productoDto);
-                return Ok();
-
-
-            }
-            catch (Exception)
-            {
-
-                return BadRequest();
-            }
-                
+                return Ok();  
         }
         [HttpGet]
         [Route("Obtener/{Id:int}")]
         [ProducesResponseType(typeof(RespuestaGenericaDto<EditarProductoDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> Obtener(int Id)
         {
-            try
-            {
+            
                 var pro = await _producto.Obtener(Id);
 
                 var producto = new RespuestaGenericaDto<EditarProductoDto>
@@ -167,14 +105,6 @@ namespace EcomerceCon_Apis.Controllers
                 }
 
 
-            }
-            catch (Exception ex)
-            {
-
-                throw new Exception("Error al obtener el producto: " + ex.Message);
-
-            }
-
 
         }
         [HttpPut]
@@ -182,27 +112,11 @@ namespace EcomerceCon_Apis.Controllers
         [ProducesResponseType(typeof(RespuestaGenericaDto<EditarProductoDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> Editar([FromBody] EditarProductoDto dto)
         {
-            try
-            {
+            
 
                 await _producto.Editar(dto);
                 return Ok();
                 
-                
-            }
-            catch (Exception ex)
-            {
-
-                return BadRequest(new RespuestaGenericaDto<bool>
-                {
-                    IsSuccess = false,
-                    Mensaje = "Hubo un error al editar el producto",
-
-                });
-            }
-
-
-           
         }
 
 

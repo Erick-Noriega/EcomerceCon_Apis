@@ -87,5 +87,25 @@ namespace EcomerceCon_Apis.Services
 
 
         }
+        public async Task<Pedido> ObtenerPedidoConId(string idpedido)
+        {
+            if(string.IsNullOrEmpty(idpedido))
+            {
+                throw new ArgumentException("El ID del pedido no puede estar vacío");
+            }
+            var pedido = await _repo.ComprobarPedidoConId(idpedido);
+            if(pedido == null)
+            {
+                throw new ArgumentException("El pedido no existe");
+            }
+            return pedido;
+        }
+      
+        }
+
     }
-}
+
+
+
+
+    

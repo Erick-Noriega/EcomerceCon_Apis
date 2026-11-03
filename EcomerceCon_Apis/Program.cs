@@ -88,6 +88,13 @@ builder.Services.AddScoped<IProductosService, ProductoService>();
 builder.Services.AddScoped<IProductoRepository, ProductoRepsitory>();
 builder.Services.AddScoped<IPedidoRepository, PedidoRepository>();
 builder.Services.AddScoped<IPedidoService, PedidoServices>();
+builder.Services.AddScoped<IPagosRepository, PagosRepository>();
+builder.Services.AddScoped<ICarritoService, CarritoService>();
+builder.Services.AddScoped<ICarritoRepository, CarritoRepository>();
+builder.Services.AddScoped<IDetalleCarritoRepository, DetalleCarritoRepository>();
+builder.Services.AddScoped<IUsuarioService, UserServices>();
+builder.Services.AddScoped<IUsuarioRepository, UsuarioReposiory>();
+
 builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
     var app = builder.Build();

@@ -1,6 +1,7 @@
 ﻿using EcomerceCon_Apis.Data;
 using EcomerceCon_Apis.Dtos.Pagos;
 using EcomerceCon_Apis.Models;
+using EcomerceCon_Apis.Properties.Repository;
 using MercadoPago.Client.Payment;
 using MercadoPago.Client.Preference;
 using MercadoPago.Resource.Payment;
@@ -15,47 +16,59 @@ namespace EcomerceCon_Apis.Services
     public class PagosServices : IPagoService
     {
 
-        private readonly IMemoryCache _memoryCache;
-        private readonly ProductosDbcontext _context;
+
+        private readonly IPedidoRepository _pedido;
         private readonly IWhatsappService whattsapServices;
+        private readonly ICarritoService _carritoService;
+        private readonly IPagosRepository _pago;
         private readonly PaymentClient _paymentClient;
-        public PagosServices(ProductosDbcontext context, IMemoryCache i, IWhatsappService w)
+        public PagosServices(IPedidoRepository context, IMemoryCache i, IWhatsappService w, IPagosRepository pago, ICarritoService carritoService)
         {
-            _context = context;
-            _memoryCache = i;
-            whattsapServices= w;
+            _pedido = context;
+            whattsapServices = w;
+            _pago = pago;
+            _carritoService = carritoService;
             _paymentClient = new PaymentClient();
-               
+
         }
 
-        public async Task<Preference> GenerarPreferenciaDePago(string pedidoId,Carrito c)
+        public async Task<Preference> GenerarPreferenciaDePago(string pedidoId, Carrito c)
         {
-            var client = new PreferenceClient();
-            var prefencelient = new PreferenceRequest
+            try
             {
-                ExternalReference = pedidoId,
-                Items = c.DetalleCarrito.Select(item => new PreferenceItemRequest
+                var client = new PreferenceClient();
+                var prefencelient = new PreferenceRequest
                 {
-                    Title = item.producto!.Nombre,
-                    Quantity = item.cantidad,
-                    CurrencyId = "ARS",
-                    UnitPrice = (decimal)item.PrecioPorUnidad
-                }).ToList(),
-                BackUrls = new PreferenceBackUrlsRequest
-                {
-                    Success = "https://localhost:5023/Pedido/Pago_exitoso",
-                    Failure = "http://localhost:5023/Pedido/Fallido",
-                    Pending = "https://localhost:5023/Pedido/Pendiente"
-                },
+                    ExternalReference = pedidoId,
+                    Items = c.DetalleCarrito.Select(item => new PreferenceItemRequest
+                    {
+                        Title = item.producto!.Nombre,
+                        Quantity = item.cantidad,
+                        CurrencyId = "ARS",
+                        UnitPrice = (decimal)item.PrecioPorUnidad
+                    }).ToList(),
+                    BackUrls = new PreferenceBackUrlsRequest
+                    {
+                        Success = "https://localhost:5023/Pedido/Pago_exitoso",
+                        Failure = "http://localhost:5023/Pedido/Fallido",
+                        Pending = "https://localhost:5023/Pedido/Pendiente"
+                    },
 
 
-                NotificationUrl = "https://scarcity-growl-sectional.ngrok-free.dev/api/Pagos/RegistrarPago",
-                AutoReturn = "approved",
-            };
-            Preference preference = await client.CreateAsync(prefencelient);
-            //await transaction.CommitAsync();
+                    NotificationUrl = "https://scarcity-growl-sectional.ngrok-free.dev/api/Pagos/RegistrarPago",
+                    AutoReturn = "approved",
+                };
+                Preference preference = await client.CreateAsync(prefencelient);
 
-            return preference;
+
+                return preference;
+            }
+            catch (Exception ex)
+            {
+
+                throw new Exception("ERROR :" + ex.ToString());
+            }
+
 
 
         }
@@ -63,11 +76,11 @@ namespace EcomerceCon_Apis.Services
 
         public async Task ProcesarPago(
      [FromQuery] string? type,
-     [FromQuery(Name ="data.id")] string? dataId,
+     [FromQuery(Name = "data.id")] string? dataId,
      [FromBody] MercadoPagoWebhookDto? body)
         {
- 
-             string paymentIdStr = dataId ?? body?.Data?.Id;
+
+            string paymentIdStr = dataId ?? body?.Data?.Id;
             if (string.IsNullOrEmpty(paymentIdStr))
 
             {
@@ -84,7 +97,6 @@ namespace EcomerceCon_Apis.Services
                 var paymentClient = new PaymentClient();
                 Payment payment = null;
 
-                // Intentar consultar el pago
                 try
                 {
                     payment = await paymentClient.GetAsync(paymentId);
@@ -102,126 +114,114 @@ namespace EcomerceCon_Apis.Services
                     return;
                 }
 
-     
-                if (payment != null && payment.Status == "approved")
+
+                try
                 {
-                    if (!int.TryParse(payment.ExternalReference, out int pedidoId))
+                    if (payment != null && payment.Status == "approved")
                     {
-                        return ;
-                    }
-
-                 
-                    var pedido = await _context.Pedidos
-     .Include(p => p.detallePedido)
-         .ThenInclude(d => d.producto)
-     .FirstOrDefaultAsync(p => p.Id == pedidoId);
-
-                    if (pedido == null || pedido.estadoPedido == EstadoPedido.EnPreparacion)
-                    {
-                        return ;
-                    }
-
-                    // Descontar Stock
-                    foreach (var detalle in pedido.detallePedido)
-                    {
-                        if (detalle.producto != null)
+                        if (!int.TryParse(payment.ExternalReference, out int pedidoId))
                         {
-                            detalle.producto.cantidad = Math.Max(0, detalle.producto.cantidad - detalle.Cantidad);
-                            
+                            return;
                         }
+
+
+                        var pedido = await _pedido.ComprobarPedidoConId(pedidoId.ToString());
+
+                        if (pedido == null || pedido.estadoPedido == EstadoPedido.EnPreparacion)
+                        {
+                            return;
+                        }
+
+
+                        foreach (var detalle in pedido.detallePedido)
+                        {
+                            if (detalle.producto != null)
+                            {
+                                detalle.producto.cantidad = Math.Max(0, detalle.producto.cantidad - detalle.Cantidad);
+
+                            }
+                        }
+
+
+                        var nuevoPago = new Pagos
+                        {
+                            PedidoId = pedido.Id,
+                            TransaccionId = payment.Id.ToString(),
+                            Monto = (float)(payment.TransactionAmount ?? 0),
+                            MetodoPago = payment.PaymentTypeId,
+                            FechaPago = DateTime.Now,
+                            EstadoPago = payment.Status
+                        };
+                        if (nuevoPago != null && nuevoPago.Monto > 0)
+                        {
+                            await _pago.AgregarPago(nuevoPago);
+
+                            await _pago.GuardarCambios();
+                        }
+
                     }
+                }
+                catch (Exception ex)
+                {
 
-                    // Registrar en la tabla Pagos
-                    var nuevoPago = new Pagos
-                    {
-                        PedidoId = pedido.Id,
-                        TransaccionId = payment.Id.ToString(),
-                        Monto = (float)(payment.TransactionAmount ?? 0),
-                        MetodoPago = payment.PaymentTypeId,
-                        FechaPago = DateTime.Now,
-                        EstadoPago = payment.Status
-                    };
+                    throw new Exception("ERROR :" + ex.ToString());
 
-                    _context.Pagos.Add(nuevoPago);
-
-                    pedido.estadoPedido = EstadoPedido.EnPreparacion;
-
-                    // Vaciar Carrito
-                    await VaciarCarritoDelUsuario(pedido.UsuarioId);
-
-                    await _context.SaveChangesAsync();
-      
                 }
 
                 return;
             }
             catch (Exception)
             {
-                return ;
-            }
-        }
-        public async Task VaciarCarritoDelUsuario(string usuarioId)
-        {
-            // Buscas todos los elementos del carrito de ese usuario
-            var itemsCarrito = await _context.Carritos.FirstOrDefaultAsync(c => c.UsuarioId == usuarioId);
-            if (itemsCarrito != null)
-            {
-                var detallecarrito = await _context.DetalleCarritos.Where(d => d.CarritoId == itemsCarrito.Id).ToListAsync();
-                _context.DetalleCarritos.RemoveRange(detallecarrito);
-
-
-
-
+                return;
             }
         }
 
-
-
-        public async Task VerificarPago(string pagoId)
+        public async Task<bool> VerificarPago(string pagoId)
         {
-            if (!long.TryParse(pagoId, out long idPago))
-                return;
-
-            var pago = await _paymentClient.GetAsync(idPago);
-
-            if (pago == null)
-                return;
-
-            var pedidoId = pago.ExternalReference;
-
-            if (!int.TryParse(pedidoId, out int idPedido))
-                return;
-
-            var pedido = await _context.Pedidos
-                .FirstOrDefaultAsync(p => p.Id == idPedido);
-
-            if (pedido == null)
-                return;
-
-            //   var telefono = await _context.Users
-            //       .Where(u => u.Id == pedido.UsuarioId)
-            //       .Select(u => u.Numero_telefono)
-            //       .FirstOrDefaultAsync();
-            string telefono = "543516341130";
-            if (string.IsNullOrEmpty(telefono))
-                return;
-
-            if (pago.Status == "approved")
+            try
             {
-                await whattsapServices.EnviarRespuesta(
-                    telefono,
-                    "¡Tu pago fue aprobado! Gracias por tu compra."
-                );
+                if (!long.TryParse(pagoId, out long idPago))
+                    return false;
+
+                var pago = await _paymentClient.GetAsync(idPago);
+
+                if (pago == null)
+                    return false;
+
+                var pedidoId = pago.ExternalReference;
+
+                if (!int.TryParse(pedidoId, out int idPedido))
+                    return false;
+
+                var pedido = await _pedido.ComprobarPedidoConId(idPedido.ToString());
+
+                if (pedido == null)
+                    return false;
+
+                if (pago.Status == "approved")
+                {
+                    pedido.estadoPedido = EstadoPedido.EnPreparacion;
+                    await _carritoService.VaciarCarritoDelUsuario(pedido.UsuarioId);
+                    return true;
+
+                }
+                else if (pago.Status == "rejected")
+                {
+                    return false;
+                }
+                return false;
+
+
             }
-            else if (pago.Status == "rejected")
+            catch (Exception ex)
             {
-                await whattsapServices.EnviarRespuesta(
-                    telefono,
-                    "Tu pago fue rechazado. Podés intentar nuevamente."
-                );
+
+                throw new Exception("ERROR :" + ex.ToString());
+
             }
         }
     }
+}
 
 
 
@@ -229,5 +229,5 @@ namespace EcomerceCon_Apis.Services
 
 
 
-    }
+    
 

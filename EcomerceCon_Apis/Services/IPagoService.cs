@@ -12,8 +12,8 @@ namespace EcomerceCon_Apis.Services
      [FromQuery(Name = "data.id")] string? dataId,
      [FromBody] MercadoPagoWebhookDto? body);
 
-        Task VaciarCarritoDelUsuario(string usuarioId);
-        Task VerificarPago(string pagoId);
+  
+        Task<bool> VerificarPago(string pagoId);
         Task<Preference> GenerarPreferenciaDePago(string PedidoId,Carrito c);
     }
 }
