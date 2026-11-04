@@ -3,7 +3,7 @@
     public class AgregarProductosAofertaDto
     {
 
-        public List<int> productosId { get; set; }
+        public List<int>productosId { get; set; }
         public int OfertaId { get; set; }
     }
 }

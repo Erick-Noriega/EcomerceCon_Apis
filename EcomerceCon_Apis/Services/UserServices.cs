@@ -1,8 +1,10 @@
 ﻿using Azure.Core;
 using EcomerceCon_Apis.Dtos;
 using EcomerceCon_Apis.Dtos.Login;
+using EcomerceCon_Apis.Dtos.Usuarios;
 using EcomerceCon_Apis.Models;
 using EcomerceCon_Apis.Properties.Repository;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -16,11 +18,53 @@ namespace EcomerceCon_Apis.Services
     {
         private readonly string _secretkey;
         private readonly IUsuarioRepository _usuarioRepository;
-        public UserServices(IUsuarioRepository usuarioRepository, IOptions<JwtSettings> conf)
+        private readonly ICarritoRepository _carritoRepository;
+        public UserServices(IUsuarioRepository usuarioRepository, IOptions<JwtSettings> conf, ICarritoRepository carritoRepository)
         {
             _usuarioRepository = usuarioRepository;
             _secretkey = conf.Value.SecretKey;
+            _carritoRepository = carritoRepository;
         }
+
+        public async Task<RespuestaGenericaDto<LoginRespondoDto>> CrearUsuario(CrearUsuarioDto user)
+        {
+            var usuario = new Usuario
+            {
+
+                UserName = user.Correo,
+                Email = user.Correo,
+                Nombre = user.Nombre,
+                Apellido = user.Apellido,
+                Fecha_nac = user.Fecha_nac
+            };
+            if (usuario != null && await _usuarioRepository.VerificarUsuario(user.Correo) == null)
+            {
+                await _usuarioRepository.CrearUsuario(usuario, user.Password);
+                var nuevocarrito = new Carrito
+                {
+                    UsuarioId = usuario.Id,
+                    Fecha = DateTime.Now
+                };
+                await _carritoRepository.CrearCarrito(nuevocarrito);
+                await _usuarioRepository.agregarUserRoles(usuario);
+                return new RespuestaGenericaDto<LoginRespondoDto>
+                {
+                    IsSuccess = true,
+                    Mensaje = "Usuario registrado correctamente y se creo el carrito",
+                };
+
+            }
+            else
+            {
+                return new RespuestaGenericaDto<LoginRespondoDto>
+                {
+                    IsSuccess = false,
+                    Mensaje = "El correo ya está registrado",
+                };
+            }
+
+        }
+
         public async Task<RespuestaGenericaDto<LoginRespondoDto>> ValidarUsuario(VerificarCuentaDto usuario)
         {
             bool aux = false;

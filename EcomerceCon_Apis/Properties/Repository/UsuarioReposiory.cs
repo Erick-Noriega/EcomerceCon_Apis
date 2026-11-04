@@ -49,5 +49,19 @@ namespace EcomerceCon_Apis.Properties.Repository
         {
             return await _context.Roles.Where(r => r.Id == id).Select(r => r.Name).FirstOrDefaultAsync();
         }
+
+        public async Task CrearUsuario(Usuario usuario,string contraseña)
+        {
+            await _userManager.CreateAsync(usuario, contraseña);
+        }
+
+        public async Task agregarUserRoles(Usuario user)
+        {
+            _context.UserRoles.Add(new IdentityUserRole<string> { UserId = user.Id, RoleId = "2" });
+            await _context.SaveChangesAsync();
+        }
     }
 }
+
+        
+

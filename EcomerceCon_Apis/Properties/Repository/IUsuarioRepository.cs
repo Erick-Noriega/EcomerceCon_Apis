@@ -1,4 +1,5 @@
 ﻿using EcomerceCon_Apis.Models;
+using Microsoft.AspNetCore.Identity;
 
 namespace EcomerceCon_Apis.Properties.Repository
 {
@@ -11,5 +12,7 @@ namespace EcomerceCon_Apis.Properties.Repository
         Task<List<string>> Roles(List<string> rolesid);
         Task<string> Idusuario(string email);
         Task<string> NombreRol(string id);
+        Task CrearUsuario(Usuario usuario, string contraseña);
+        Task agregarUserRoles(Usuario usuario);
     }
 }

@@ -11,6 +11,14 @@ namespace EcomerceCon_Apis.Properties.Repository
 		{
             _context = context;
         }
+
+        public async Task CrearCarrito(Carrito carrito)
+        {
+            _context.Add(carrito);
+            await _context.SaveChangesAsync();
+           
+        }
+
         public async Task<Carrito?> EncontrarCarrito(string usuarioId)
         {
 			try

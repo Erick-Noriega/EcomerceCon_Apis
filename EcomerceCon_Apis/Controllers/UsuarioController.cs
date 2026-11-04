@@ -3,6 +3,7 @@ using EcomerceCon_Apis.Dtos;
 using EcomerceCon_Apis.Dtos.Producto;
 using EcomerceCon_Apis.Dtos.Usuarios;
 using EcomerceCon_Apis.Models;
+using EcomerceCon_Apis.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -16,10 +17,12 @@ namespace EcomerceCon_Apis.Controllers
     {
         private readonly UserManager<Usuario> _userManager;
         private readonly ProductosDbcontext _contex;
-        public UsuarioController(UserManager<Usuario> userManager,ProductosDbcontext contex)
+        private readonly IUsuarioService usuario;
+        public UsuarioController(UserManager<Usuario> userManager,ProductosDbcontext contex, IUsuarioService usuarioService)
         {
             _userManager = userManager;
             _contex = contex;
+            usuario = usuarioService;
         }
         [HttpPost]
         [Route("Registrar")]
@@ -27,39 +30,15 @@ namespace EcomerceCon_Apis.Controllers
 
         public async Task<IActionResult> RegistrarUsuario([FromBody]CrearUsuarioDto request)
         {
-            var usuario = new Usuario
+            var resultado = await usuario.CrearUsuario(request);
+            if (resultado.IsSuccess)
             {
-            
-                UserName = request.Correo,
-                Email = request.Correo,
-                Nombre = request.Nombre,
-                Apellido = request.Apellido,
-                Fecha_nac = request.Fecha_nac
-            };
-            if(usuario!=null && await _userManager.FindByEmailAsync(request.Correo) == null)
-            {
-                    await _userManager.CreateAsync(usuario, request.Password);
-
-
-                var nuevocarrito = new Carrito
-                {
-                    UsuarioId = usuario.Id,
-                    Fecha = DateTime.Now
-                };
-                _contex.Add(nuevocarrito);
-                await _contex.SaveChangesAsync();
-                _contex.UserRoles.Add(new IdentityUserRole<string> { UserId = usuario.Id, RoleId = "2" });
-                await _contex.SaveChangesAsync();
-
-                return Ok(new { mensaje = "Usuario registrado correctamente y se creo el carrito" });
+                return Ok(resultado);
             }
-            else if(await _userManager.FindByEmailAsync(request.Correo)!=null)
+            else
             {
-                return BadRequest(new { mensaje = "El correo ya está registrado" });
+                return BadRequest(resultado);
             }
-            else {return BadRequest(new { mensaje = "Error al registrar el usuario" });}
-
-
         }
 
 

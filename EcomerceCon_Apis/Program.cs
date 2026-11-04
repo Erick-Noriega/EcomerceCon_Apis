@@ -94,6 +94,8 @@ builder.Services.AddScoped<ICarritoRepository, CarritoRepository>();
 builder.Services.AddScoped<IDetalleCarritoRepository, DetalleCarritoRepository>();
 builder.Services.AddScoped<IUsuarioService, UserServices>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioReposiory>();
+builder.Services.AddScoped<IOfertaService, OfertaServices>();
+builder.Services.AddScoped<IOfertaRepository, OfertaRepository>();
 
 builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
