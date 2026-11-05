@@ -170,6 +170,15 @@ namespace EcomerceCon_Apis.Services
             };
         }
 
+       public async Task<string> ObtenerIdUsuario(string email)
+        {
+            var idusario = await _usuarioRepository.Idusuario(email);
+            if (idusario == null)
+            {
+                throw new Exception("No se encontró el usuario con el correo proporcionado.");
+            }
+            return idusario;
         }
+    }
     }
 

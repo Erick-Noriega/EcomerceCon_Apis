@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EcomerceCon_Apis.Controllers
 {
+        [Authorize(Roles ="Admin")]
     [Route("api/[controller]")]
     [ApiController]
     public class CategoriaController : ControllerBase

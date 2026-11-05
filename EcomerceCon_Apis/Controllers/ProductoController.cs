@@ -13,6 +13,7 @@ using System.Collections.Generic;
 
 namespace EcomerceCon_Apis.Controllers
 {
+        [Authorize(Roles ="Admin")]
     [Route("api/[controller]")]
     [ApiController]
     public class ProductoController : ControllerBase
@@ -27,7 +28,7 @@ namespace EcomerceCon_Apis.Controllers
         }
         [HttpGet]
         [Route("ListaParaAdmins")]
-        [Authorize(Roles ="Admin")]
+  
    
         [ProducesResponseType(typeof(RespuestaGenericaDto<List<ProductoDtoParaAminds>>), StatusCodes.Status200OK)]
 
@@ -47,7 +48,8 @@ namespace EcomerceCon_Apis.Controllers
 
         [HttpGet]
         [Route("Lista")]
-       
+        [AllowAnonymous]
+
         [ProducesResponseType(typeof(RespuestaGenericaDto<List<ProductoDto>>), StatusCodes.Status200OK)]
 
         public async Task<IActionResult> listar()
@@ -72,6 +74,7 @@ namespace EcomerceCon_Apis.Controllers
 
         [HttpPost]
         [Route("Crear")]
+  
         [ProducesResponseType(typeof(RespuestaGenericaDto<CrearProductoDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> Crear([FromBody] CrearProductoDto productoDto)
         {

@@ -17,6 +17,7 @@ namespace EcomerceCon_Apis.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+        [Authorize(Roles = "Admin")]
     public class PedidoController : ControllerBase
     {
         private readonly ProductosDbcontext _context;
@@ -32,7 +33,6 @@ namespace EcomerceCon_Apis.Controllers
         }
         [HttpPost]
         [Route("ConfirmarPedido")]
-        [Authorize]
         [ProducesResponseType(typeof(RespuestaGenericaDto<DireccionDeEnvioDto>), StatusCodes.Status200OK)]
 
         public async Task<IActionResult>ConfirmarPedido([FromBody]DireccionDeEnvioDto direccion)

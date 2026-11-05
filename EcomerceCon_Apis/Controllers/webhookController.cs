@@ -34,16 +34,22 @@ namespace EcomerceCon_Apis.Controllers
     {
         private readonly UserManager<Usuario> userManager;
         private readonly string _secretkey;
+        private readonly IProductosService _productos;
         private readonly IWhatsappService _whattsapservices;
         private readonly IMemoryCache _memoryCache;
+        private readonly IPedidoService _pedido;
         private ProductosDbcontext _context;
-        public webhookController(IOptions<JwtSettings> conf, ProductosDbcontext context, UserManager<Usuario> u, IMemoryCache i,IWhatsappService W)
+        private readonly IUsuarioService _usuarioService;
+        public webhookController(IOptions<JwtSettings> conf,IPedidoService pedido, ProductosDbcontext context, UserManager<Usuario> u, IMemoryCache i,IWhatsappService W, IProductosService productos,IUsuarioService usuarioService )
         {
             userManager = u;
             _context = context;
             _secretkey = conf.Value.SecretKey;
             _memoryCache = i;
+            _pedido = pedido;
             _whattsapservices = W;
+            _productos = productos;
+            _usuarioService = usuarioService;
         }
 
 
@@ -185,8 +191,9 @@ namespace EcomerceCon_Apis.Controllers
                         if (texto == "COMPRAR")
                         {
 
-
-                            mensajeRespuesta = await Productos() + "\n" + " Indique el producto que quiere (poniendo el numero de al lado)";
+                           
+                
+                            mensajeRespuesta =await Productos() + "\n" + " Indique el producto que quiere (poniendo el numero de al lado)";
                             await _whattsapservices.EnviarRespuesta(NumeroRemitente, mensajeRespuesta);
                         }
                         _memoryCache.Set(claveestado, "ESPERANDO_NUMERO_PRODUCTO", TimeSpan.FromMinutes(5));
@@ -540,217 +547,59 @@ namespace EcomerceCon_Apis.Controllers
                 mostrarCarrito += "Precio por unidad " + item.PrecioUnitario.ToString() + "\n";
                 mostrarCarrito += "Cantidad " + item.Cantidad.ToString() + "\n";
             }
-            // mostrarCarrito+= "¿Desea vaciar el carrito(comprar los productos)?/Escriba SI si desea vaciar el carrito / Escriba NO si quiere Cancelar";
             return mostrarCarrito;
 
         }
-
-
         private async Task<string> Productos()
         {
-            var fecha = DateTime.Now;
 
-            List<ProductoDto> listaproductos = await _context.Productos.Include(c => c.categoria)
-                       .Include(o => o.ofertas).Select(p => new ProductoDto
-                       {
-
-                           Id = p.Id,
-                           ImagenUrl = p.ImagenUrl,
-                           Descripcion = p.Descripcion,
-                           Nombre = p.Nombre,
-                           CategoriaId = p.CategoriaId,
-                           CategoriaNombre = p.categoria.Nombre,
-                           PrecioOriginal = p.precio,
-                           TieneOferta = p.ofertas.Any(op => fecha >= op.oferta.Fecha_inicio && fecha <= op.oferta.Fecha_fin),
-                           PrecioFinal = p.ofertas.Any(op => fecha >= op.oferta.Fecha_inicio && fecha <= op.oferta.Fecha_fin)
-   ? p.precio - (p.precio * (p.ofertas
-       .Where(op => fecha >= op.oferta.Fecha_inicio && fecha <= op.oferta.Fecha_fin)
-       .Select(op => op.oferta.MontoAdescontar)
-       .FirstOrDefault() / 100)) // <-- Usa 100.0 si tus precios son double/float
-   : p.precio
-                       })
-                       .ToListAsync();
+            var listaproductos = await _productos.lista();
             string productos = "nuestros productos son:\n\n";
-            foreach (var item in listaproductos)
+
+        foreach (var item in listaproductos)
             {
                 productos += $"🔹 *{item.Id}.* {item.Nombre} — *${item.PrecioFinal}*\n";
             }
-
             productos += "\n🛍️ **¿Cual quieres comprar?**\n• Escribí *NO* para cancelar";
             return productos;
         }
 
-  
-
         private async Task<bool> Loguearse(string clave, string correo)
         {
-            bool aux = false;
-            var user = await userManager.FindByEmailAsync(correo);
-            if (user != null)
+            var verficarDto = new VerificarCuentaDto
             {
-                aux = true;
-            }
-            bool EsCorrecta = await userManager.CheckPasswordAsync(user, clave);
-            if (EsCorrecta == true && aux == true)
+                correo = correo,
+                clave = clave
+            };
+            var logueado=await _usuarioService.ValidarUsuario(verficarDto);
+            if (logueado.IsSuccess)
             {
-                var keybytes = Encoding.UTF8.GetBytes(_secretkey);
-                var claims = new ClaimsIdentity();
-                claims.AddClaim(new Claim(ClaimTypes.NameIdentifier, correo));
-                var tokendescriptor = new SecurityTokenDescriptor
-                {
-                    Subject = claims,
-                    Expires = DateTime.UtcNow.AddMinutes(10),
-                    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(keybytes), SecurityAlgorithms.HmacSha256Signature)
-                };
-                var tokenHandler = new JwtSecurityTokenHandler();
-                var tokenConfig = tokenHandler.CreateToken(tokendescriptor);
-                var tokencreado = tokenHandler.WriteToken(tokenConfig);
-
                 return true;
             }
             else
             {
                 return false;
-                    
             }
-
-        }
-        private bool TryExtraerDatos(JsonElement body, out string telefono, out string mensaje)
-        {
-            telefono = string.Empty;
-            mensaje = string.Empty;
-            try
-            {
-                var entry = body.GetProperty("entry")[0];
-                var changes = entry.GetProperty("changes")[0];
-                var value = changes.GetProperty("value");
-
-                if (value.TryGetProperty("messages", out JsonElement messages) && messages.GetArrayLength() > 0)
-                {
-                    var message = messages[0];
-                    telefono = message.GetProperty("from").GetString() ?? string.Empty;
-                    if (message.TryGetProperty("type", out JsonElement type) && type.GetString() == "text")
-                    {
-                        mensaje = message.GetProperty("text").GetProperty("body").GetString() ?? string.Empty;
-                        return true;
-                    }
-
-
-                }
-
-
-
-            }
-            catch
-            {
-
-                return false;
-            }
-            return false;
-
 
 
 
         }
-        private async Task<string> ConfirmarPedido([FromBody] DireccionDeEnvioDto direccion, string email,string numero)
 
+        private async Task<string> ConfirmarPedido([FromBody] DireccionDeEnvioDto direccion, string email, string numero)
         {
-
-            var usuario = await userManager.FindByEmailAsync(email) ?? await userManager.FindByEmailAsync(email);
-            if (usuario == null)
+          var userId=await _usuarioService.ObtenerIdUsuario(email);
+            if (userId == null)
             {
                 return "Usuario no autenticado.";
             }
-
-
-
-
-            if (string.IsNullOrEmpty(usuario.Id))
+            string respuesta = "";
+            var linkdepago=await _pedido.AgregarPedido(direccion, userId);
+            if (linkdepago.Exito)
             {
-                return "Usuario no autenticado.";
+                respuesta = linkdepago.InitPoint;
             }
+            return respuesta;
 
-            var carrito = await _context.Carritos.Include(c => c.DetalleCarrito).ThenInclude(d => d.producto).FirstOrDefaultAsync(c => c.UsuarioId == usuario.Id);
-            if (carrito == null || carrito.DetalleCarrito == null || !carrito.DetalleCarrito.Any())
-            {
-                return "Carrito no encontrado";
-            }
-            using var transaction = await _context.Database.BeginTransactionAsync();
-            var pedido = new Pedido
-            {
-
-                UsuarioId = usuario.Id,
-                fecha_pedido = DateTime.Now,
-                total = (float)carrito.DetalleCarrito.Sum(d => d.PrecioPorUnidad * d.cantidad),
-                estadoPedido = EstadoPedido.Pendiente,
-                DireccionDeEnvio = direccion.DireccionCompleta,
-                detallePedido = carrito.DetalleCarrito.Select(d => new DetallePedido
-                {
-                    ProductoId = d.ProductoId,
-                    Cantidad = d.cantidad,
-                    PrecioPorUni = d.PrecioPorUnidad,
-
-
-                }).ToList(),
-
-            };
-            var estadoepdido = EstadoPedido.Pendiente;
-            var comprobar = await _context.Pedidos
-      .FirstOrDefaultAsync(p => p.UsuarioId == usuario.Id && p.estadoPedido == estadoepdido);
-
-            if (comprobar == null)
-            {
-
-                _context.Pedidos.Add(pedido);
-
-                await _context.SaveChangesAsync();
-            }
-            else if (comprobar != null)
-            {
-                pedido.Id = comprobar.Id;
-                comprobar.DireccionDeEnvio = pedido.DireccionDeEnvio;
-                comprobar.fecha_pedido = pedido.fecha_pedido;
-            }
-
-
-
-
-            var client = new PreferenceClient();
-            var prefencelient = new PreferenceRequest
-            {
-                ExternalReference = pedido.Id.ToString(),
-                Items = carrito.DetalleCarrito.Select(item => new PreferenceItemRequest
-                {
-                    Title = item.producto!.Nombre,
-                    Quantity = item.cantidad,
-                    CurrencyId = "ARS",
-                    UnitPrice = (decimal)item.PrecioPorUnidad
-                }).ToList(),
-                BackUrls = new PreferenceBackUrlsRequest
-                {
-                    Success = $"https://wa.me/{numero}",
-                    Failure = "http://localhost:5023/Pedido/Fallido",
-                    Pending = "https://localhost:5023/Pedido/Pendiente"
-                },
-
-
-                NotificationUrl = "https://scarcity-growl-sectional.ngrok-free.dev/api/Pagos/RegistrarPago",
-
-                AutoReturn = "approved",
-                DateOfExpiration = DateTime.UtcNow.AddMinutes(3),
-
-
-            };
-         
-
-
-            Preference preference = await client.CreateAsync(prefencelient);
-            await transaction.CommitAsync();
-
-            
-
-
-            return preference.InitPoint;
 
         }
 

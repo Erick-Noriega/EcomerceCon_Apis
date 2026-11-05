@@ -6,6 +6,7 @@
         public string NombreProducto { get; set; }
         public int OfertaId { get; set; }
         public string NombreOferta { get; set; }
+        public float? precioProducto { get; set; }
 
     }
 }

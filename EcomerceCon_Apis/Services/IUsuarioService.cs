@@ -9,5 +9,6 @@ namespace EcomerceCon_Apis.Services
 
         Task<RespuestaGenericaDto<LoginRespondoDto>> ValidarUsuario(VerificarCuentaDto user);
         Task<RespuestaGenericaDto<LoginRespondoDto>> CrearUsuario(CrearUsuarioDto user);
+        Task<string> ObtenerIdUsuario(string email);
     }
 }

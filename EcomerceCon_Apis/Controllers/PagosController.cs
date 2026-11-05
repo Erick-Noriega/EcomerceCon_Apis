@@ -19,12 +19,13 @@ namespace EcomerceCon_Apis.Controllers
     public class PagosController : ControllerBase
     {
     
-        private readonly ProductosDbcontext _context;
+ 
         private readonly IPagoService _pagoservices;
-        public PagosController(ProductosDbcontext context, IPagoService a)
+  
+        public PagosController( IPagoService a)
         {
-            _context = context;
-         
+
+        
             _pagoservices = a;
         }
         [HttpPost("RegistrarPago")]

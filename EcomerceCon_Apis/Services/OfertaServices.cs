@@ -1,5 +1,6 @@
 ﻿using EcomerceCon_Apis.Data;
 using EcomerceCon_Apis.Dtos.Ofertas;
+using EcomerceCon_Apis.Dtos.Producto;
 using EcomerceCon_Apis.Models;
 using EcomerceCon_Apis.Properties.Repository;
 
@@ -9,9 +10,11 @@ namespace EcomerceCon_Apis.Services
 
     {
         private readonly IOfertaRepository _ofeertas;
-        public OfertaServices(IOfertaRepository context)
+        private readonly IProductosService _productos;
+        public OfertaServices(IOfertaRepository context, IProductosService productos)
         {
             _ofeertas = context;
+            _productos = productos;
         }
         public async Task CrearOferta(CrearOfertaDto ofertaDto)
             
@@ -154,7 +157,70 @@ namespace EcomerceCon_Apis.Services
 
 
         }
-            
+
+        public async Task<VistaParaWiewModeldto>VistaParaViewModel(int Id)
+        {
+            var ofertaproducto = await _ofeertas.ObtenerOfertaPorId(Id);
+            if (ofertaproducto == null)
+            {
+                throw new Exception("No se encontró la oferta");
+            }
+
+            var productosDeOferta = await _ofeertas.ObtenerProductos(Id)
+                ;
+            var todosLosProductos = await _productos.ListaDeAdmins();
+
+            var productos = new List<ProductoDtoParaAminds>();
+
+                var aux = 0;
+                var prod = await _ofeertas.ObtenerProductos(Id);
+            foreach (var producto in todosLosProductos)
+            {
+
+                
+                    if (producto.Id != prod[aux])
+                    {
+                        productos.Add(producto);
+                        
+                    }
+                else if(producto.Id == prod[aux] &&aux<prod.Count-1)
+                {
+                    aux++;
+                }
+                
+            }
+
+            var todoslosproductosdtos= productos.Select(p => new ProductoOfertaDto
+            {
+                IdProducto = p.Id,
+                NombreProducto = p.Nombre,
+                PrecioProducto = p.PrecioOriginal
+            }).ToList();
+            var productosde = new List<EditarProductoDto>();
+
+            foreach (var producto in productosDeOferta)
+            {
+                var produ = await _productos.Obtener(producto);
+                if (prod != null)
+                {
+                    productosde.Add(produ);
+                }
+            }
+            var viewmodel=new VistaParaWiewModeldto
+            {
+                OfertaId = Id,
+                ProductosDeOferta = productosde.Select(p => new ProductoOfertaDto
+                {
+                    IdProducto = p.Id,
+                    NombreProducto = p.Nombre,
+                    PrecioProducto = p.precio
+                }).ToList(),
+                TodosLosProductos = todoslosproductosdtos
+            };
+            return viewmodel;
+
+
         }
+    }
     }
 

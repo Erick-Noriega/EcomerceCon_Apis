@@ -4,6 +4,7 @@ using EcomerceCon_Apis.Dtos.Ofertas;
 using EcomerceCon_Apis.Dtos.Pagos;
 using EcomerceCon_Apis.Models;
 using EcomerceCon_Apis.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,13 +13,14 @@ namespace EcomerceCon_Apis.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class OfertasController : ControllerBase
     {
-        private readonly ProductosDbcontext _context;
+        private readonly IProductosService _context;
         private readonly IOfertaService _oferta;
-        public OfertasController(ProductosDbcontext context, IOfertaService oferta)
+        public OfertasController(IProductosService context, IOfertaService oferta)
         {
-            _context = context;
+            
             _oferta = oferta;
         }
 
@@ -95,6 +97,12 @@ namespace EcomerceCon_Apis.Controllers
             var produoff = await _oferta.obtenerproductos(Id);
             return Ok(produoff);
         }
-        
+        [HttpGet]
+        [Route("VistaParaViewModel/{Id:int}")]
+        public async Task<IActionResult> VistaParaViewModel(int Id)
+        {
+           var oferta = await _oferta.VistaParaViewModel(Id);
+            return Ok(oferta);
+        }
     }
 }

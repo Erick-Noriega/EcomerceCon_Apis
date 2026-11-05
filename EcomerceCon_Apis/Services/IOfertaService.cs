@@ -1,4 +1,5 @@
 ﻿using EcomerceCon_Apis.Dtos.Ofertas;
+using Microsoft.AspNetCore.Mvc;
 
 namespace EcomerceCon_Apis.Services
 {
@@ -12,5 +13,6 @@ namespace EcomerceCon_Apis.Services
         Task Agregar(AgregarProductosAofertaDto agregarProductosAofertaDto);
         Task EliminarProductosDeLaOferta(AgregarProductosAofertaDto productos);
         Task<List<ListarOfertaProductoDto>> obtenerproductos(int idoferta);
+        Task<VistaParaWiewModeldto> VistaParaViewModel(int Id);
     }
 }
