@@ -5,12 +5,17 @@ namespace EcomerceCon_Apis.Services
 {
     public class WhattsapServices : IWhatsappService
     {
+        private readonly string _token;
+        public WhattsapServices(IConfiguration configuration)
+        {
+            _token = configuration["Whatsapp:Token"];
+        }
         public async Task EnviarRespuesta(string NumeroDestino, string Mensaje)
         {
             try
             {
                 string idnumeroremitente = "1291986937341080";
-                string tokenacceso = "EAAgxUk2nLocBSZBeqvRf6kHmKCG1rzMylPQQtdscNTJ0oejHKHyAVX8Px8VXiBwZBs3BQ73SWLzukWAsoFMJpVkQZCWCblxXvPvRqk6rywGYoBMGSs3HLs7Gkvx6xzZBzBTw1TrxOXQoKhtZCBwYyUHnY3j5UNVYgDVb8fKLVWM31NlWYTz33ZBAmcQmfkmCYuB0EEZBId4Y3zqJF3KaLqMBw9pZCy16p1GZCggKMwXmrm8F0nY7zyfzxZAcu3WYQYWYZBQmd95uVlnqTmDyuui4nJM9E5vwc1AH42R2Br5g8wZD";
+                string tokenacceso = _token;
 
                 string numeroDestinoApi = NumeroDestino.Trim();
 
