@@ -4,7 +4,7 @@
     {
         public bool Exito { get; set; }
         public string? mensaje { get; set; }
-        public int? PedidoId { get; set; }
+        public int PedidoId { get; set; }
         public string? InitPoint { get; set; }
     }
 }

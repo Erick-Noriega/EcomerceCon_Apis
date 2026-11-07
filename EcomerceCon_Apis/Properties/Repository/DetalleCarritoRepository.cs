@@ -1,4 +1,5 @@
 ﻿using EcomerceCon_Apis.Data;
+using EcomerceCon_Apis.Dtos.DetalleCarrito;
 using EcomerceCon_Apis.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,6 +20,28 @@ namespace EcomerceCon_Apis.Properties.Repository
             await _context.SaveChangesAsync();
 
 
+        }
+
+
+        public async Task<DetalleCarrito> VerificarExistencia(int idcarrito, int productoId)
+        {
+            return await _context.DetalleCarritos.FirstOrDefaultAsync(d => d.CarritoId == idcarrito && d.ProductoId == productoId);
+        }
+
+        public async Task AgregarDetalleCarrito(DetalleCarrito detalleCarrito)
+        {
+            _context.Add(detalleCarrito);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task EliminarProduDeCarrito(DetalleCarrito detallecarrito)
+        {
+            _context.DetalleCarritos.Remove(detallecarrito);
+            await _context.SaveChangesAsync();
+        }
+        public async Task GuardarCambios()
+        {
+            await _context.SaveChangesAsync();
         }
     }
 }

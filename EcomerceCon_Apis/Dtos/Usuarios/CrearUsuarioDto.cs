@@ -3,6 +3,7 @@
     public class CrearUsuarioDto
     {
         public string Correo { get; set; }
+        public string ClaveRandomaaa { get; set; } = string.Empty;
         public string Nombre { get; set; }
         public string Apellido { get; set; }
         public DateTime Fecha_nac { get; set; }

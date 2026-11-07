@@ -15,6 +15,7 @@ namespace EcomerceCon_Apis.Properties.Repository
         public async Task<Pedido> ComprobarPedidoConId(string idpedido)
         {
             var pedido = await _context.Pedidos
+       .Include(p => p.Usuario)
        .Include(p => p.detallePedido)
            .ThenInclude(d => d.producto)
        .FirstOrDefaultAsync(p => p.Id.ToString() == idpedido);
@@ -41,6 +42,15 @@ namespace EcomerceCon_Apis.Properties.Repository
 
         }
 
-      
+        public async Task<EstadoPedido> EstadoDePedido(int pedidoId)
+        {
+            var pedido = await _context.Pedidos.Where(p=>p.Id == pedidoId).Select(p=>p.estadoPedido).FirstOrDefaultAsync();
+            return pedido;
+        }
+
+        public async Task<Pedido>ObtenerPedidoConId(string idpedido)
+        {
+          return await _context.Pedidos.FirstOrDefaultAsync(p => p.Id.ToString() == idpedido);
+        }
     }
 }

@@ -9,7 +9,9 @@ namespace EcomerceCon_Apis.Services
         Task<PedidoPagoDTo> AgregarPedido(DireccionDeEnvioDto dto,string UserId);
         Task<Pedido> ObtenerPedidoConId(string idpedido);
  
-        
+         Task<EstadoPedido> EstadoDePedido(int pedidoId);
+    
+
 
 
 

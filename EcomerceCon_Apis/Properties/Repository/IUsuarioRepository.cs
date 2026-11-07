@@ -14,6 +14,9 @@ namespace EcomerceCon_Apis.Properties.Repository
         Task<string> NombreRol(string id);
         Task CrearUsuario(Usuario usuario, string contraseña);
         Task agregarUserRoles(Usuario usuario);
-        
+        Task<string> ObtenerNumeroUsaurio(string UsuarioId);
+        Task<List<string>> ObtenerClavesRandom();
+        Task<Usuario?> ObtenerUsuarioPorId(string usuarioId);
+        Task<Usuario?> ObtenerUsuarioPorClaveAsync(string clave);
     }
 }

@@ -20,16 +20,17 @@ namespace EcomerceCon_Apis.Services
         private readonly IPedidoRepository _pedido;
         private readonly IWhatsappService whattsapServices;
         private readonly ICarritoService _carritoService;
+        private readonly IUsuarioRepository _usuario;
         private readonly IPagosRepository _pago;
         private readonly PaymentClient _paymentClient;
-        public PagosServices(IPedidoRepository context, IMemoryCache i, IWhatsappService w, IPagosRepository pago, ICarritoService carritoService)
+        public PagosServices(IPedidoRepository context, IMemoryCache i, IWhatsappService w, IPagosRepository pago, ICarritoService carritoService, IUsuarioRepository usuario)
         {
             _pedido = context;
             whattsapServices = w;
             _pago = pago;
             _carritoService = carritoService;
             _paymentClient = new PaymentClient();
-
+            _usuario = usuario;
         }
 
         public async Task<Preference> GenerarPreferenciaDePago(string pedidoId, Carrito c)
@@ -178,8 +179,11 @@ namespace EcomerceCon_Apis.Services
 
         public async Task<bool> VerificarPago(string pagoId)
         {
+            var resultado = new VerificacionPagoDto();
             try
             {
+             
+
                 if (!long.TryParse(pagoId, out long idPago))
                     return false;
 
@@ -198,19 +202,40 @@ namespace EcomerceCon_Apis.Services
                 if (pedido == null)
                     return false;
 
+                resultado.NumeroTelefono = pedido.Usuario?.Numero_telefono;
+
+                var p=await _pedido.ObtenerPedidoConId(idPedido.ToString());
+
+                var usuarioId = p?.UsuarioId;
+                
+
                 if (pago.Status == "approved")
-                {
-                    pedido.estadoPedido = EstadoPedido.EnPreparacion;
-                    await _carritoService.VaciarCarritoDelUsuario(pedido.UsuarioId);
-                    return true;
 
-                }
-                else if (pago.Status == "rejected")
                 {
-                    return false;
+                    var telefono = await _usuario.ObtenerNumeroUsaurio(usuarioId);
+                       if(telefono != null)
+                    {
+                        pedido.estadoPedido = EstadoPedido.EnPreparacion;
+                        await whattsapServices.EnviarRespuesta(telefono, "Su pedido ha sido aprobado y está en preparación.");
+                        await _carritoService.VaciarCarritoDelUsuario(usuarioId);
+
+                        await _pedido.GuardarCambios();
+                    }
+                    else
+                    {
+
+                        pedido.estadoPedido = EstadoPedido.EnPreparacion;
+                        await _carritoService.VaciarCarritoDelUsuario(usuarioId);
+
+                        await _pedido.GuardarCambios();
+                    }
+
+                
+                    
+                return true;
                 }
+
                 return false;
-
 
             }
             catch (Exception ex)

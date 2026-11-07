@@ -1,7 +1,6 @@
 ﻿using EcomerceCon_Apis.Data;
 using EcomerceCon_Apis.Dtos;
 using EcomerceCon_Apis.Dtos.DetalleCarrito;
-using EcomerceCon_Apis.Dtos.Login;
 using EcomerceCon_Apis.Dtos.Pedido;
 using EcomerceCon_Apis.Dtos.Producto;
 using EcomerceCon_Apis.Migrations;
@@ -96,7 +95,41 @@ namespace EcomerceCon_Apis.Controllers
                 string claveestado = $"estado_Login_{NumeroRemitente}";
                 string claveparatiempo = $"tiempo_{NumeroRemitente}";
                 string claveparamensajes = $"mensajes_{NumeroRemitente}";
+                string claveTokenWhatsapp = $"token_whatsapp_{NumeroRemitente}";
                 bool ms = false;
+
+                if (_memoryCache.TryGetValue(claveTokenWhatsapp, out string tokenWhatsapp))
+                {
+                    try
+                    {
+                        HttpContext.User = ValidarTokenWhatsapp(tokenWhatsapp);
+
+                        if (_memoryCache.TryGetValue(claveparatiempo, out DateTime ultimaActividadSesion) &&
+                            DateTime.UtcNow - ultimaActividadSesion > TimeSpan.FromMinutes(5))
+                        {
+                            _memoryCache.Remove(claveTokenWhatsapp);
+                            _memoryCache.Remove(claveestado);
+                            _memoryCache.Remove(claveparatiempo);
+                            _memoryCache.Remove($"destino_login_{NumeroRemitente}");
+
+                            await _whattsapservices.EnviarRespuesta(
+                                NumeroRemitente,
+                                "⏰🔒 Tu sesión se cerró por inactividad durante más de 5 minutos.\n\nEscribí *2* para hacer un pedido o *3* para ver tu carrito.");
+                            return Ok();
+                        }
+
+                        _memoryCache.Set(claveparatiempo, DateTime.UtcNow, TimeSpan.FromMinutes(5));
+                    }
+                    catch (SecurityTokenException)
+                    {
+                        _memoryCache.Remove(claveTokenWhatsapp);
+                        _memoryCache.Remove(claveestado);
+                        _memoryCache.Remove(claveparatiempo);
+                        _memoryCache.Remove($"destino_login_{NumeroRemitente}");
+                        await _whattsapservices.EnviarRespuesta(NumeroRemitente, "Tu sesión de WhatsApp expiró. Escribí *2* para hacer un pedido o *3* para ver tu carrito.");
+                        return Ok();
+                    }
+                }
 
                 try
                 {
@@ -127,7 +160,6 @@ namespace EcomerceCon_Apis.Controllers
                 {
                     _memoryCache.Set(claveparamensajes, "RECIBIO_MENSAJES", TimeSpan.FromMinutes(3));
 
-                    _memoryCache.TryGetValue(claveestado, out string estadoactual);
                     if (EstadoActual != null)
                     {
                         if (_memoryCache.TryGetValue(claveparatiempo, out DateTime ultimaInteraccion))
@@ -151,62 +183,70 @@ namespace EcomerceCon_Apis.Controllers
 
                     }
 
-                    if (EstadoActual == "ESPERANDO_EMAILPARA_PEDIDO")
+                    if (EstadoActual == "ESPERANDO_CLAVE_RANDOM")
                     {
-                        _memoryCache.Set($"temp_email_{NumeroRemitente}",MensajeTexto, TimeSpan.FromMinutes(5));
-                     
-                        _memoryCache.Set(claveestado, "ESPERANDO_CONTRA_PEDIDO", TimeSpan.FromMinutes(5));
-                        mensajeRespuesta = "Ahora Ingresa tu contraseña:";
+                        var resultadoLogin = await _usuarioService.IniciarSesionConClaveRandom(MensajeTexto);
+                        if (!resultadoLogin.IsSuccess || resultadoLogin.Data == null)
+                        {
+                            _memoryCache.Set(claveestado, "ESPERANDO_CLAVE_RANDOM", TimeSpan.FromMinutes(5));
+                            await _whattsapservices.EnviarRespuesta(NumeroRemitente, "La clave o documento no fue reconocido. Inténtalo nuevamente.");
+                            return Ok();
+                        }
+
+                        HttpContext.User = ValidarTokenWhatsapp(resultadoLogin.Data.Token);
+                        var tiempoSesion = TimeSpan.FromMinutes(10);
+                        _memoryCache.Set(claveTokenWhatsapp, resultadoLogin.Data.Token, tiempoSesion);
+                        _memoryCache.Set(claveparatiempo, DateTime.UtcNow, tiempoSesion);
+
+                        var destino = _memoryCache.Get<string>($"destino_login_{NumeroRemitente}");
+                        _memoryCache.Remove($"destino_login_{NumeroRemitente}");
+                        if (destino == "CARRITO")
+                        {
+                            mensajeRespuesta = await verCarrito(resultadoLogin.Data.Correo);
+                            if (mensajeRespuesta.Contains("carrito está vacío", StringComparison.OrdinalIgnoreCase))
+                            {
+                                _memoryCache.Set(claveestado, "CARRITO_VACIO", tiempoSesion);
+                                mensajeRespuesta += "\n¿Deseas agregar productos? Escribí *COMPRAR*.\nEscribí *CERRAR SESION* para cerrar sesión.";
+                            }
+                            else
+                            {
+                                _memoryCache.Set(claveestado, "USUARIO_LOGUEADO", tiempoSesion);
+                                mensajeRespuesta += "\n🛒 ¿Desea finalizar su compra?\n\nEscriba PAGAR para comprar los productos.\nEscriba CANCELAR para cancelar sin vaciar el carrito.";
+                            }
+                        }
+                        else if (destino == "PAGO")
+                        {
+                            _memoryCache.Set(claveestado, "ESPERANDOPEDIDO", tiempoSesion);
+                            mensajeRespuesta = "Sesión iniciada. Por favor, ingresa el nombre de tu calle.";
+                        }
+                        else
+                        {
+                            _memoryCache.Set(claveestado, "ESPERANDO_NUMERO_PRODUCTO", tiempoSesion);
+                            mensajeRespuesta = "✅ Sesión iniciada correctamente.\n" + await Productos() + "\nIndica el producto que quieres (escribe el número).";
+                        }
                         await _whattsapservices.EnviarRespuesta(NumeroRemitente, mensajeRespuesta);
                         return Ok();
                     }
-                    else if (EstadoActual == "ESPERANDO_CONTRA_PEDIDO")
-                    {
-                       
-                            _memoryCache.TryGetValue($"temp_email_{NumeroRemitente}", out string emailcarrito);
-                        var log = await Loguearse(MensajeTexto, emailcarrito);
-                        string men = "";
-                        if (log)
-                        { 
-                             men = "✅ *Logueado correctamente.*\n\n🛒 Elegí los productos que quieras comprar.\n👉 Si deseás comprar, escribí *COMPRAR*.\n🚪 Escribí *CERRAR SESION* si querés cerrar sesión.";
-                            _memoryCache.Set($"Contra_Carrito{NumeroRemitente}", MensajeTexto, TimeSpan.FromMinutes(5));
-                            _memoryCache.Set(claveestado, "USUARIO_LOG_PEDIDO", TimeSpan.FromMinutes(5));
-                        }
-                        else if(!log)
-                        {
-                            _memoryCache.Set(claveestado, "ESPERANDO_EMAILPARA_PEDIDO", TimeSpan.FromMinutes(5));
-                            men = "❌ *Error al loguearse.*\n\n Por favor, intenta nuevamente.";
-
-                        }
-
-                        await _whattsapservices.EnviarRespuesta(NumeroRemitente, men);
-                        return Ok();
-
-                    }
-
-                    else if (EstadoActual == "USUARIO_LOG_PEDIDO")
-                    {
-                        _memoryCache.Set($"USUARIO_LOG_CARRITO{NumeroRemitente}","Logueado_correctamente", TimeSpan.FromMinutes(5));
-                        string texto = MensajeTexto.ToUpper();
-                        if (texto == "COMPRAR")
-                        {
-
-                           
-                
-                            mensajeRespuesta =await Productos() + "\n" + " Indique el producto que quiere (poniendo el numero de al lado)";
-                            await _whattsapservices.EnviarRespuesta(NumeroRemitente, mensajeRespuesta);
-                        }
-                        _memoryCache.Set(claveestado, "ESPERANDO_NUMERO_PRODUCTO", TimeSpan.FromMinutes(5));
-                        return Ok();
-
-                    }
-
                     else if (EstadoActual == "ESPERANDO_NUMERO_PRODUCTO")
                     {
-                        string texto = MensajeTexto.ToUpper();
+                        string texto = MensajeTexto.Trim().ToUpperInvariant();
+
+                        if (texto == "NO")
+                        {
+                            _memoryCache.Remove(claveestado);
+                            await _whattsapservices.EnviarRespuesta(NumeroRemitente, "Compra cancelada. Escribí *MENU* para ver las opciones disponibles.");
+                            return Ok();
+                        }
 
                         if(int.TryParse(MensajeTexto,out int numero)&& numero > 0)
                         {
+                            var productosDisponibles = await _productos.lista();
+                            if (!productosDisponibles.Any(producto => producto.Id == numero))
+                            {
+                                await _whattsapservices.EnviarRespuesta(NumeroRemitente, "Por favor, ingresa el número de un producto de la lista o escribí *NO* para cancelar.");
+                                return Ok();
+                            }
+
                             _memoryCache.Set($"ID_DE_PRODU_{NumeroRemitente}", MensajeTexto, TimeSpan.FromMinutes(5));
                             _memoryCache.Set(claveestado, "ESPERANDO_CANTIDAD", TimeSpan.FromMinutes(5));
                             await _whattsapservices.EnviarRespuesta(NumeroRemitente, "🛒 Ingrese la cantidad que desea 🔢");
@@ -214,7 +254,7 @@ namespace EcomerceCon_Apis.Controllers
                         }
                         else
                         {
-                            await _whattsapservices.EnviarRespuesta(NumeroRemitente, "Por favor, ingrese un número válido.");
+                            await _whattsapservices.EnviarRespuesta(NumeroRemitente, "Por favor, ingresa el número de un producto de la lista o escribí *NO* para cancelar.");
                             return Ok();
 
                         }
@@ -225,10 +265,7 @@ namespace EcomerceCon_Apis.Controllers
 
                             _memoryCache.Set($"CANTIDAD_DE_PRODU{NumeroRemitente}", MensajeTexto, TimeSpan.FromMinutes(5));
                             string id = "";
-                            string emaila = "";
-                            _memoryCache.TryGetValue($"temp_email_{NumeroRemitente}", out string p);
-
-                            emaila = p;
+                            var emaila = HttpContext.User.FindFirst(ClaimTypes.Email)?.Value;
 
                             _memoryCache.TryGetValue($"ID_DE_PRODU_{NumeroRemitente}", out string a);
 
@@ -265,7 +302,7 @@ namespace EcomerceCon_Apis.Controllers
                     }
                     else if(EstadoActual== "ESPERANDO_DES")
                     {
-                        string txt= MensajeTexto.ToUpper();
+                        string txt = MensajeTexto.Trim().ToUpperInvariant();
                         if (txt == "COMPRAR")
                         {
                             _memoryCache.Set(claveestado, "ESPERANDO_NUMERO_PRODUCTO");
@@ -273,89 +310,83 @@ namespace EcomerceCon_Apis.Controllers
                             mensajeRespuesta = await Productos() + "\n" + " Indique el producto que quiere (poniendo el numero de al lado)";
                             await _whattsapservices.EnviarRespuesta(NumeroRemitente, mensajeRespuesta);
 
-                        return Ok();
-                        }
-                        else if (txt=="MENU")
-                        {
-                           
-                        }
-                    }
-
-                        if (EstadoActual == "ESPERANDO_EMAIL")
-                        {
-                            _memoryCache.Set($"temp_email_{NumeroRemitente}", MensajeTexto, TimeSpan.FromMinutes(5));
-                            _memoryCache.Set(claveestado, "ESPERANDO_PASSWORD", TimeSpan.FromMinutes(5));
-
-
-                            mensajeRespuesta = "Ahora ingresa tu contraseña:";
-                            _memoryCache.Set(claveparatiempo, DateTime.UtcNow, TimeSpan.FromMinutes(5));
-                            if (MensajeTexto != "3")
-                            {
-                                await _whattsapservices.EnviarRespuesta(NumeroRemitente, mensajeRespuesta);
                             return Ok();
                         }
 
-
-                        return Ok();
+                        if (txt == "MENU")
+                        {
+                            _memoryCache.Remove(claveestado);
+                            await _whattsapservices.EnviarRespuesta(NumeroRemitente, "👋 Menú principal:\n1. Productos\n2. Hacer un Pedido\n3. Ver Carrito");
+                            return Ok();
                         }
 
+                        await _whattsapservices.EnviarRespuesta(NumeroRemitente, "Por favor, ingresa una de estas dos opciones: *MENU* o *COMPRAR*.");
+                        return Ok();
+                    }
 
-
-                        else if (EstadoActual == "ESPERANDO_PASSWORD")
+                        else if (EstadoActual == "CARRITO_VACIO")
                         {
+                            string textoRecibido = MensajeTexto.Trim().ToUpperInvariant();
 
-
-                            _memoryCache.TryGetValue($"temp_email_{NumeroRemitente}", out string emailingresado);
-
-                            var usuariovalido = await Loguearse(MensajeTexto, emailingresado);
-                            if (usuariovalido != null)
+                            if (textoRecibido == "COMPRAR")
                             {
-                                _memoryCache.Set($"usuario_logueado_{NumeroRemitente}", emailingresado, TimeSpan.FromMinutes(6));
-                                _memoryCache.Set(claveestado, "USUARIO_LOGUEADO", TimeSpan.FromMinutes(6));
+                            var emailSesion = HttpContext.User.FindFirst(ClaimTypes.Email)?.Value;
 
-
-
-                                mensajeRespuesta = await verCarrito(emailingresado, MensajeTexto);
-                                if (!mensajeRespuesta.Contains("vacio"))
+                                if (string.IsNullOrWhiteSpace(emailSesion))
                                 {
-                                    mensajeRespuesta += "\n🛒 ¿Desea finalizar su compra o vaciar el carrito?\n\nEscriba PAGAR para comprar los productos.\nEscriba Cancelar si desea cancelar y vaciar el carrito.";
+                                    _memoryCache.Set($"destino_login_{NumeroRemitente}", "PEDIDO", TimeSpan.FromMinutes(5));
+                                    _memoryCache.Set(claveestado, "ESPERANDO_CLAVE_RANDOM", TimeSpan.FromMinutes(5));
+                                    await _whattsapservices.EnviarRespuesta(NumeroRemitente, "Para agregar productos, escribe tu clave aleatoria/documento:");
+                                    return Ok();
                                 }
 
+                                _memoryCache.Set(claveestado, "ESPERANDO_NUMERO_PRODUCTO", TimeSpan.FromMinutes(6));
+                                mensajeRespuesta = await Productos() + "\n Indique el producto que quiere (poniendo el numero de al lado)";
                                 await _whattsapservices.EnviarRespuesta(NumeroRemitente, mensajeRespuesta);
                                 return Ok();
-
                             }
-                            else
+
+                            if (textoRecibido is "CERRAR SESION" or "CERRAR SESIÓN")
                             {
                                 _memoryCache.Remove(claveestado);
-                                _memoryCache.Remove($"temp_email_{NumeroRemitente}");
-
-                                mensajeRespuesta = "Correo electrónico o contraseña incorrectos. Escribe 3 para intentar de nuevo.";
-
-
-
-                                await _whattsapservices.EnviarRespuesta(NumeroRemitente, mensajeRespuesta);
-
-
+                                _memoryCache.Remove(claveparatiempo);
+                                _memoryCache.Remove(claveTokenWhatsapp);
+                                await _whattsapservices.EnviarRespuesta(NumeroRemitente, "Sesión cerrada. Escribí *MENU* para volver a comenzar.");
                                 return Ok();
-
-
                             }
-                        }
 
+                            await _whattsapservices.EnviarRespuesta(NumeroRemitente, "Por favor, escribe una de estas opciones: *COMPRAR* o *CERRAR SESION*.");
+                            return Ok();
+                        }
                         else if (EstadoActual == "USUARIO_LOGUEADO")
                         {
-                        _memoryCache.Set($"USUARIO_LOG_CARRITO{NumeroRemitente}", "LOGUEADO", TimeSpan.FromMinutes(6));
-                            string textoRecibido = MensajeTexto.ToUpper();
-                       
+                            string textoRecibido = MensajeTexto.Trim().ToUpperInvariant();
+
                             if (textoRecibido == "PAGAR")
                             {
+                                var emailSesion = HttpContext.User.FindFirst(ClaimTypes.Email)?.Value;
 
+                                if (string.IsNullOrWhiteSpace(emailSesion))
+                                {
+                                    _memoryCache.Set($"destino_login_{NumeroRemitente}", "CARRITO", TimeSpan.FromMinutes(5));
+                                    _memoryCache.Set(claveestado, "ESPERANDO_CLAVE_RANDOM", TimeSpan.FromMinutes(5));
+                                    await _whattsapservices.EnviarRespuesta(NumeroRemitente, "Para continuar con el pedido, escribe tu clave aleatoria/documento:");
+                                    return Ok();
+                                }
 
                                 _memoryCache.Set(claveestado, "ESPERANDOPEDIDO", TimeSpan.FromMinutes(5));
                                 await _whattsapservices.EnviarRespuesta(NumeroRemitente, "por favor ingresa el nombre de tu calle");
-
+                                return Ok();
                             }
+
+                            if (textoRecibido == "CANCELAR")
+                            {
+                                _memoryCache.Remove(claveestado);
+                                await _whattsapservices.EnviarRespuesta(NumeroRemitente, "Operación cancelada. Tu carrito se mantiene intacto. Escribí *MENU* para ver las opciones disponibles.");
+                                return Ok();
+                            }
+
+                            await _whattsapservices.EnviarRespuesta(NumeroRemitente, "Por favor, ingresa una de estas dos opciones: *PAGAR* o *CANCELAR*.");
                             return Ok();
 
                         }
@@ -379,12 +410,6 @@ namespace EcomerceCon_Apis.Controllers
 
                             _memoryCache.Set($"NUMERO_DE_CALLE_{NumeroRemitente}", textoRecibido, TimeSpan.FromMinutes(5));
                             _memoryCache.Set(claveestado, "ESPERANDO_PROVINCIA", TimeSpan.FromMinutes(5));
-                            string auxa = $"temp_email_{NumeroRemitente}";
-                            string e = "";
-                            if (_memoryCache.TryGetValue(auxa, out string email))
-                            {
-                                e = email;
-                            }
                             await _whattsapservices.EnviarRespuesta(NumeroRemitente, "🗺️ Por favor, ingresa tu provincia. 📍");
                             return Ok();
 
@@ -430,17 +455,13 @@ namespace EcomerceCon_Apis.Controllers
 
 
                             };
-                            if (_memoryCache.TryGetValue($"temp_email_{NumeroRemitente}", out string email))
+                            var email = HttpContext.User.FindFirst(ClaimTypes.Email)?.Value;
+                            if (!string.IsNullOrWhiteSpace(email))
                             {
-                            var numeroa = "1 (555) 169-0046";
-                                mensajeRespuesta = await ConfirmarPedido(direccion, email, numeroa);
+                                mensajeRespuesta = await ConfirmarPedido(direccion, email, NumeroRemitente);
                                 await _whattsapservices.EnviarRespuesta(NumeroRemitente, mensajeRespuesta);
 
                                 return Ok();
-                            }
-                            if (_memoryCache.TryGetValue($"estadopago", out string m))
-                            {
-                                var ma = m;
                             }
                         }
                     }
@@ -452,57 +473,51 @@ namespace EcomerceCon_Apis.Controllers
                     }
                     else if (MensajeTexto == "2")
                     {
-                  
-                    _memoryCache.TryGetValue($"USUARIO_LOGUEADO{NumeroRemitente}", out string emailLogueado);
-                        if (emailLogueado==null)
-
+                        var emailLogueado = HttpContext.User.FindFirst(ClaimTypes.Email)?.Value;
+                        if (string.IsNullOrWhiteSpace(emailLogueado))
                         {
-                            _memoryCache.Set(claveestado, "ESPERANDO_EMAILPARA_PEDIDO", TimeSpan.FromMinutes(5));
-                            mensajeRespuesta = "Para hacer tu pedido debes iniciar sesión.\nPor favor, ingresa tu *correo electrónico*:";
+                            _memoryCache.Set($"destino_login_{NumeroRemitente}", "PEDIDO", TimeSpan.FromMinutes(5));
+                            _memoryCache.Set(claveestado, "ESPERANDO_CLAVE_RANDOM", TimeSpan.FromMinutes(5));
+                            _memoryCache.Set(claveparatiempo, DateTime.UtcNow, TimeSpan.FromMinutes(5));
+                            mensajeRespuesta = "Para hacer tu pedido, escribe tu clave aleatoria/documento:";
+                            await _whattsapservices.EnviarRespuesta(NumeroRemitente, mensajeRespuesta);
+                            return Ok();
+                        }
+
+                        _memoryCache.Set(claveestado, "ESPERANDO_NUMERO_PRODUCTO", TimeSpan.FromMinutes(10));
+                        mensajeRespuesta = "Ya estás autenticado. " + await Productos() + "\nIndica el producto que quieres (escribe el número).";
                         await _whattsapservices.EnviarRespuesta(NumeroRemitente, mensajeRespuesta);
                         return Ok();
                     }
-                    else
-                    {
-                        await _whattsapservices.EnviarRespuesta(NumeroRemitente, "Ya estás logueado. Puedes continuar con tu pedido.");
-
-                        mensajeRespuesta = await Productos() + "\n" + " Indique el producto que quiere (poniendo el numero de al lado)";
-                        await _whattsapservices.EnviarRespuesta(NumeroRemitente, mensajeRespuesta);
-
-
-                    }
-
-                }
                     else if (MensajeTexto == "3")
                     {
+                        var email = HttpContext.User.FindFirst(ClaimTypes.Email)?.Value;
 
-                    _memoryCache.TryGetValue($"USUARIO_LOG_CARRITO{NumeroRemitente}", out string emailLogueadoa);
-
-                    if (emailLogueadoa == null)
-                    {
-
-                            _memoryCache.Set(claveestado, "ESPERANDO_EMAIL", TimeSpan.FromMinutes(5));
-                            mensajeRespuesta = "Para ver tu carrito debes iniciar sesión.\nPor favor, ingresa tu *correo electrónico*:";
+                        if (string.IsNullOrWhiteSpace(email))
+                        {
+                            _memoryCache.Set($"destino_login_{NumeroRemitente}", "CARRITO", TimeSpan.FromMinutes(5));
+                            _memoryCache.Set(claveestado, "ESPERANDO_CLAVE_RANDOM", TimeSpan.FromMinutes(5));
+                            _memoryCache.Set(claveparatiempo, DateTime.UtcNow, TimeSpan.FromMinutes(5));
+                            mensajeRespuesta = "Para ver tu carrito, escribe tu clave aleatoria/documento:";
+                            await _whattsapservices.EnviarRespuesta(NumeroRemitente, mensajeRespuesta);
+                            return Ok();
                         }
 
-                    else
-                    {
-                        _memoryCache.Set(claveestado, "USUARIO_LOGUEADO", TimeSpan.FromMinutes(6));
+                        mensajeRespuesta = await verCarrito(email);
 
-
-                 _memoryCache.TryGetValue($"temp_email_{NumeroRemitente}", out string emailingresado);
-                  _memoryCache.TryGetValue($"Email_Carrito_{NumeroRemitente}", out string emailcarrito);
-                        ;
-                        var email = emailingresado?? emailcarrito;
-                        mensajeRespuesta = await verCarrito(email,"");
-                        if (!mensajeRespuesta.Contains("vacio"))
+                        if (mensajeRespuesta.Contains("carrito está vacío", StringComparison.OrdinalIgnoreCase))
                         {
-                            mensajeRespuesta += "\n🛒 ¿Desea finalizar su compra o vaciar el carrito?\n\nEscriba PAGAR para comprar los productos.\nEscriba Cancelar si desea cancelar y vaciar el carrito.";
+                            _memoryCache.Set(claveestado, "CARRITO_VACIO", TimeSpan.FromMinutes(6));
+                            mensajeRespuesta += "\n¿Deseas agregar productos? Escribí *COMPRAR*.\nEscribí *CERRAR SESION* para cerrar sesión.";
+                        }
+                        else
+                        {
+                            _memoryCache.Set(claveestado, "USUARIO_LOGUEADO", TimeSpan.FromMinutes(6));
+                            mensajeRespuesta += "\n🛒 ¿Desea finalizar su compra?\n\nEscriba PAGAR para comprar los productos.\nEscriba CANCELAR para cancelar sin vaciar el carrito.";
                         }
 
                         await _whattsapservices.EnviarRespuesta(NumeroRemitente, mensajeRespuesta);
                         return Ok();
-                    }
                     }
                     else
                     {
@@ -519,14 +534,38 @@ namespace EcomerceCon_Apis.Controllers
                 return Ok();
         }
 
+        private ClaimsPrincipal ValidarTokenWhatsapp(string token)
+        {
+            var validationParameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretkey)),
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ValidateLifetime = true,
+                RoleClaimType = ClaimTypes.Role,
+                ClockSkew = TimeSpan.Zero
+            };
+
+            return new JwtSecurityTokenHandler().ValidateToken(token, validationParameters, out _);
+        }
+
         private async Task<string> verCarrito(string email, string clave="")
         {
 
 
             var usuario = await userManager.FindByEmailAsync(email);
+            if (usuario == null)
+            {
+                return "No se encontró el usuario asociado al carrito.";
+            }
+
             var usuarioId = usuario.Id;
             var ca = await _context.Carritos.FirstOrDefaultAsync(c => c.UsuarioId == usuarioId);
-
+            if (ca == null)
+            {
+                return "🛒 Tu carrito está vacío.";
+            }
 
             var carrito = await _context.DetalleCarritos.Where(c => c.CarritoId == ca.Id).Select(c => new DetalleCarritoDto
             {
@@ -539,6 +578,11 @@ namespace EcomerceCon_Apis.Controllers
 
             })
                 .ToListAsync();
+            if (carrito.Count == 0)
+            {
+                return "🛒 Tu carrito está vacío.";
+            }
+
             string mostrarCarrito = "tus productos son:\n\n";
 
             foreach (var item in carrito)
@@ -564,34 +608,27 @@ namespace EcomerceCon_Apis.Controllers
             return productos;
         }
 
-        private async Task<bool> Loguearse(string clave, string correo)
-        {
-            var verficarDto = new VerificarCuentaDto
-            {
-                correo = correo,
-                clave = clave
-            };
-            var logueado=await _usuarioService.ValidarUsuario(verficarDto);
-            if (logueado.IsSuccess)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-
-
-
-        }
-
         private async Task<string> ConfirmarPedido([FromBody] DireccionDeEnvioDto direccion, string email, string numero)
         {
-          var userId=await _usuarioService.ObtenerIdUsuario(email);
+            var userId = await _usuarioService.ObtenerIdUsuario(email);
             if (userId == null)
             {
                 return "Usuario no autenticado.";
             }
+
+            var usuario = await userManager.FindByIdAsync(userId);
+            if (usuario == null)
+            {
+                return "Usuario no autenticado.";
+            }
+
+            usuario.Numero_telefono = numero;
+            var actualizacionUsuario = await userManager.UpdateAsync(usuario);
+            if (!actualizacionUsuario.Succeeded)
+            {
+                return "No se pudo guardar el número de WhatsApp para las notificaciones del pedido.";
+            }
+
             string respuesta = "";
             var linkdepago=await _pedido.AgregarPedido(direccion, userId);
             if (linkdepago.Exito)

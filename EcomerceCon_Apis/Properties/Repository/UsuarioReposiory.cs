@@ -60,6 +60,50 @@ namespace EcomerceCon_Apis.Properties.Repository
             _context.UserRoles.Add(new IdentityUserRole<string> { UserId = user.Id, RoleId = "2" });
             await _context.SaveChangesAsync();
         }
+
+        public async Task<string>ObtenerNumeroUsaurio(string UsuarioId)
+        {
+            return await _context.Users.Where(u => u.Id == UsuarioId).Select(u => u.Numero_telefono).FirstOrDefaultAsync();
+        }
+
+        public async Task<List<string>> ObtenerClavesRandom()
+        {
+            return await _context.Users
+                .Select(usuario => usuario.ClaveRandomaaa)
+                .ToListAsync();
+        }
+
+        public async Task<Usuario?> ObtenerUsuarioPorId(string usuarioId)
+        {
+            return await _context.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(usuario => usuario.Id == usuarioId);
+        }
+
+        public async Task<Usuario?> ObtenerUsuarioPorClaveAsync(string clave)
+        {
+            if (string.IsNullOrWhiteSpace(clave))
+            {
+                return null;
+            }
+
+            var claveNormalizada = clave.Trim().ToUpperInvariant();
+            return await _context.Users
+                .AsNoTracking()
+                .Where(usuario => usuario.ClaveRandomaaa.ToUpper() == claveNormalizada)
+                .Select(usuario => new Usuario
+                {
+                    Id = usuario.Id,
+                    UserName = usuario.UserName,
+                    Email = usuario.Email,
+                    Nombre = usuario.Nombre,
+                    Apellido = usuario.Apellido,
+                    Fecha_nac = usuario.Fecha_nac,
+                    Numero_telefono = usuario.Numero_telefono,
+                    ClaveRandomaaa = usuario.ClaveRandomaaa
+                })
+                .FirstOrDefaultAsync();
+        }
     }
 }
 

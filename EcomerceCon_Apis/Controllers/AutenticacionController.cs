@@ -39,5 +39,13 @@ namespace EcomerceCon_Apis.Controllers
             return Ok(respuesta);
 
         }
+
+        [HttpPost]
+        [Route("Logout")]
+        public async Task<IActionResult> logout()
+        {
+            await _usuario.CerrarSesion();
+            return Ok();
+        }
     }
 }

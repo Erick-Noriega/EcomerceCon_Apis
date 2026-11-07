@@ -9,6 +9,9 @@ namespace EcomerceCon_Apis.Properties.Repository
         Task<Pedido> VerificarExistencia(string UsuarioId, EstadoPedido estadoPedido);
 
         Task<Pedido> ComprobarPedidoConId(string idpedido);
+         Task<EstadoPedido> EstadoDePedido(int pedidoId);
+        Task<Pedido> ObtenerPedidoConId(string idpedido);
+
 
 
 

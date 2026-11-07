@@ -13,7 +13,7 @@ namespace EcomerceCon_Apis.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    [Authorize(Roles ="Admin")]
     public class OfertasController : ControllerBase
     {
         private readonly IProductosService _context;

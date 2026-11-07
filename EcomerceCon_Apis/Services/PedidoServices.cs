@@ -82,27 +82,26 @@ namespace EcomerceCon_Apis.Services
                 InitPoint = preference.InitPoint,
                 mensaje="Link generado",
                 Exito=true
-            };
-         
+            };         
             return respuesta;
-
 
         }
         public async Task<Pedido> ObtenerPedidoConId(string idpedido)
         {
-            if(string.IsNullOrEmpty(idpedido))
-            {
-                throw new ArgumentException("El ID del pedido no puede estar vacío");
-            }
-            var pedido = await _repo.ComprobarPedidoConId(idpedido);
+           var pedido = await _repo.ObtenerPedidoConId(idpedido);
             if(pedido == null)
             {
                 throw new ArgumentException("El pedido no existe");
             }
             return pedido;
         }
-      
+
+        public async Task<EstadoPedido>EstadoDePedido(int pedidoId)
+        {
+            var estado = await _repo.EstadoDePedido(pedidoId);
+            return estado;
         }
+    }
 
     }
 

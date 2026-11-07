@@ -41,7 +41,7 @@ namespace EcomerceCon_Apis.Migrations
 
                     b.HasIndex("UsuarioId");
 
-                    b.ToTable("Carritos");
+                    b.ToTable("Carritos", (string)null);
                 });
 
             modelBuilder.Entity("EcomerceCon_Apis.Models.Categoria", b =>
@@ -58,7 +58,7 @@ namespace EcomerceCon_Apis.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Categorias");
+                    b.ToTable("Categorias", (string)null);
                 });
 
             modelBuilder.Entity("EcomerceCon_Apis.Models.DetalleCarrito", b =>
@@ -87,7 +87,7 @@ namespace EcomerceCon_Apis.Migrations
 
                     b.HasIndex("ProductoId");
 
-                    b.ToTable("DetalleCarritos");
+                    b.ToTable("DetalleCarritos", (string)null);
                 });
 
             modelBuilder.Entity("EcomerceCon_Apis.Models.DetallePedido", b =>
@@ -119,7 +119,7 @@ namespace EcomerceCon_Apis.Migrations
 
                     b.HasIndex("ProductoId");
 
-                    b.ToTable("DetallePedidos");
+                    b.ToTable("DetallePedidos", (string)null);
                 });
 
             modelBuilder.Entity("EcomerceCon_Apis.Models.MensajeRecibido", b =>
@@ -142,7 +142,7 @@ namespace EcomerceCon_Apis.Migrations
                     b.HasIndex("Mensaje")
                         .IsUnique();
 
-                    b.ToTable("MensajeRecibidos");
+                    b.ToTable("MensajeRecibidos", (string)null);
                 });
 
             modelBuilder.Entity("EcomerceCon_Apis.Models.OfertaProducto", b =>
@@ -186,7 +186,7 @@ namespace EcomerceCon_Apis.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Ofertas");
+                    b.ToTable("Ofertas", (string)null);
                 });
 
             modelBuilder.Entity("EcomerceCon_Apis.Models.Pagos", b =>
@@ -222,7 +222,7 @@ namespace EcomerceCon_Apis.Migrations
 
                     b.HasIndex("PedidoId");
 
-                    b.ToTable("Pagos");
+                    b.ToTable("Pagos", (string)null);
                 });
 
             modelBuilder.Entity("EcomerceCon_Apis.Models.Pedido", b =>
@@ -254,7 +254,7 @@ namespace EcomerceCon_Apis.Migrations
 
                     b.HasIndex("UsuarioId");
 
-                    b.ToTable("Pedidos");
+                    b.ToTable("Pedidos", (string)null);
                 });
 
             modelBuilder.Entity("EcomerceCon_Apis.Models.Producto", b =>
@@ -290,7 +290,7 @@ namespace EcomerceCon_Apis.Migrations
 
                     b.HasIndex("CategoriaId");
 
-                    b.ToTable("Productos");
+                    b.ToTable("Productos", (string)null);
                 });
 
             modelBuilder.Entity("EcomerceCon_Apis.Models.Usuario", b =>
@@ -302,6 +302,10 @@ namespace EcomerceCon_Apis.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Apellido")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ClaveRandomaaa")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 

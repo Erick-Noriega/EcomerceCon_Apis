@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace EcomerceCon_Apis.Services
@@ -19,26 +20,30 @@ namespace EcomerceCon_Apis.Services
         private readonly string _secretkey;
         private readonly IUsuarioRepository _usuarioRepository;
         private readonly ICarritoRepository _carritoRepository;
-        public UserServices(IUsuarioRepository usuarioRepository, IOptions<JwtSettings> conf, ICarritoRepository carritoRepository)
+        private readonly SignInManager<Usuario> _signInManager;
+        public UserServices(IUsuarioRepository usuarioRepository, IOptions<JwtSettings> conf, ICarritoRepository carritoRepository, SignInManager<Usuario> signInManager)
         {
             _usuarioRepository = usuarioRepository;
             _secretkey = conf.Value.SecretKey;
             _carritoRepository = carritoRepository;
+            _signInManager = signInManager;
         }
 
         public async Task<RespuestaGenericaDto<LoginRespondoDto>> CrearUsuario(CrearUsuarioDto user)
         {
-            var usuario = new Usuario
+            if (await _usuarioRepository.VerificarUsuario(user.Correo) == null)
             {
+                user.ClaveRandomaaa = await GenerarClaveRandomUnica();
+                var usuario = new Usuario
+                {
+                    UserName = user.Correo,
+                    Email = user.Correo,
+                    Nombre = user.Nombre,
+                    Apellido = user.Apellido,
+                    Fecha_nac = user.Fecha_nac,
+                    ClaveRandomaaa = user.ClaveRandomaaa
+                };
 
-                UserName = user.Correo,
-                Email = user.Correo,
-                Nombre = user.Nombre,
-                Apellido = user.Apellido,
-                Fecha_nac = user.Fecha_nac
-            };
-            if (usuario != null && await _usuarioRepository.VerificarUsuario(user.Correo) == null)
-            {
                 await _usuarioRepository.CrearUsuario(usuario, user.Password);
                 var nuevocarrito = new Carrito
                 {
@@ -63,6 +68,21 @@ namespace EcomerceCon_Apis.Services
                 };
             }
 
+        }
+
+        private async Task<string> GenerarClaveRandomUnica()
+        {
+            var clavesExistentes = await _usuarioRepository.ObtenerClavesRandom();
+            var claves = new HashSet<string>(clavesExistentes, StringComparer.OrdinalIgnoreCase);
+            string clave;
+
+            do
+            {
+                clave = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
+            }
+            while (claves.Contains(clave));
+
+            return clave;
         }
 
         public async Task<RespuestaGenericaDto<LoginRespondoDto>> ValidarUsuario(VerificarCuentaDto usuario)
@@ -153,6 +173,57 @@ namespace EcomerceCon_Apis.Services
 
             }
 
+        public async Task<RespuestaGenericaDto<LoginRespondoDto>> IniciarSesionConClaveRandom(string claveRandom)
+        {
+            var usuario = await _usuarioRepository.ObtenerUsuarioPorClaveAsync(claveRandom);
+            if (usuario == null || string.IsNullOrWhiteSpace(usuario.Email))
+            {
+                return new RespuestaGenericaDto<LoginRespondoDto>
+                {
+                    IsSuccess = false,
+                    Mensaje = "La clave o documento no fue reconocido."
+                };
+            }
+
+            var rolesId = await _usuarioRepository.ListaDeRolesDelUsuario(usuario.Id);
+            var roles = rolesId.Count == 0
+                ? new List<string>()
+                : await _usuarioRepository.Roles(rolesId);
+
+            var claims = new ClaimsIdentity();
+            claims.AddClaim(new Claim(ClaimTypes.NameIdentifier, usuario.Id));
+            claims.AddClaim(new Claim(ClaimTypes.Email, usuario.Email));
+
+            foreach (var rol in roles.Where(rol => !string.IsNullOrWhiteSpace(rol)))
+            {
+                claims.AddClaim(new Claim(ClaimTypes.Role, rol));
+            }
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = claims,
+                Expires = DateTime.UtcNow.AddMinutes(10),
+                SigningCredentials = new SigningCredentials(
+                    new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretkey)),
+                    SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = tokenHandler.WriteToken(tokenHandler.CreateToken(tokenDescriptor));
+
+            return new RespuestaGenericaDto<LoginRespondoDto>
+            {
+                IsSuccess = true,
+                Mensaje = "Inicio de sesión por WhatsApp correcto.",
+                Data = new LoginRespondoDto
+                {
+                    Token = token,
+                    Correo = usuario.Email,
+                    Role = roles.FirstOrDefault() ?? string.Empty
+                }
+            };
+        }
+
         private RespuestaGenericaDto<LoginRespondoDto>  nulos(string id)
         {
             if (id == null)
@@ -178,6 +249,29 @@ namespace EcomerceCon_Apis.Services
                 throw new Exception("No se encontró el usuario con el correo proporcionado.");
             }
             return idusario;
+        }
+
+        public async Task<UsuarioDatosDto?> ObtenerDatosUsuario(string usuarioId)
+        {
+            var usuario = await _usuarioRepository.ObtenerUsuarioPorId(usuarioId);
+            if (usuario == null)
+            {
+                return null;
+            }
+
+            return new UsuarioDatosDto
+            {
+                Nombre = usuario.Nombre,
+                Apellido = usuario.Apellido,
+                Correo = usuario.Email ?? string.Empty,
+                NumeroTelefono = usuario.Numero_telefono,
+                ClaveRandomaaa = usuario.ClaveRandomaaa
+            };
+        }
+
+        public Task CerrarSesion()
+        {
+            return _signInManager.SignOutAsync();
         }
     }
     }

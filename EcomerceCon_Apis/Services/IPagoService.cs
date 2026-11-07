@@ -13,7 +13,8 @@ namespace EcomerceCon_Apis.Services
      [FromBody] MercadoPagoWebhookDto? body);
 
   
-        Task<bool> VerificarPago(string pagoId);
+     
         Task<Preference> GenerarPreferenciaDePago(string PedidoId,Carrito c);
+        Task<bool> VerificarPago(string pagoId);
     }
 }

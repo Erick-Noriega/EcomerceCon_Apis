@@ -21,12 +21,13 @@ namespace EcomerceCon_Apis.Controllers
     
  
         private readonly IPagoService _pagoservices;
+        private readonly IWhatsappService _whatsappService;
   
-        public PagosController( IPagoService a)
+        public PagosController(IPagoService a, IWhatsappService whatsappService)
         {
 
-        
             _pagoservices = a;
+            _whatsappService = whatsappService;
         }
         [HttpPost("RegistrarPago")]
         [HttpGet("RegistrarPago")]
@@ -44,7 +45,9 @@ namespace EcomerceCon_Apis.Controllers
                     return Ok();
                 await _pagoservices.ProcesarPago(
                     type, dataId, body);
-                await _pagoservices.VerificarPago(pagoId);
+                var resultado = await _pagoservices.VerificarPago(pagoId);
+
+
                 return Ok();
             }
 
